@@ -9,6 +9,7 @@ import { DrivelicenceModule } from './drivelicence/drivelicence.module';
 import { BusModule } from './bus/bus.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { RoadModule } from './road/road.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -23,7 +24,8 @@ import { join } from 'path';
   DaysModule,
   HorarioModule,
   DrivelicenceModule,
-  BusModule
+  BusModule,
+  RoadModule
 ]
 })
 export class AppModule {}
