@@ -16,6 +16,10 @@ async function bootstrap() {
   .addTag('days')
   .addTag('drivelicence')
   .addTag('bus')
+  .addTag('code')
+  .addTag('divices')
+  .addTag('horario')
+  .addTag('tarifa')
   .build();
 const document = SwaggerModule.createDocument(app, config);
 SwaggerModule.setup('api', app, document)

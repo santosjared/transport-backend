@@ -10,6 +10,11 @@ import { BusModule } from './bus/bus.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { RoadModule } from './road/road.module';
+import { SocketModule } from './socket/socket.module';
+import { CodesModule } from './codes/codes.module';
+import { DiviceModule } from './divice/divice.module';
+import { TarifaModule } from './tarifa/tarifa.module';
+import { LineaModule } from './linea/linea.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -25,7 +30,12 @@ import { RoadModule } from './road/road.module';
   HorarioModule,
   DrivelicenceModule,
   BusModule,
-  RoadModule
+  RoadModule,
+  SocketModule,
+  CodesModule,
+  DiviceModule,
+  TarifaModule,
+  LineaModule,
 ]
 })
 export class AppModule {}
