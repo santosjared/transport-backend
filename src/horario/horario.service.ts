@@ -16,8 +16,8 @@ export class HorarioService {
     return await this.horarioModel.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} horario`;
+  findOne(id: number | string) {
+    return this.horarioModel.findOne({id:id});
   }
 
   update(id: number, updateHorarioDto: UpdateHorarioDto) {

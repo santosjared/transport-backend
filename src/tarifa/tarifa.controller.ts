@@ -21,7 +21,7 @@ export class TarifaController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.tarifaService.findOne(+id);
+    return this.tarifaService.findOne(id);
   }
 
   @Patch(':id')

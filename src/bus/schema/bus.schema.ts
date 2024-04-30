@@ -7,7 +7,7 @@ export type BusDocmunet = HydratedDocument<Bus>
 @Schema()
 export class Bus{
     @Prop({type:String, default: ()=>uuidv4(), required:true})
-    uuid:string
+    id:string
     @Prop()
     trademark:string
     @Prop()
@@ -17,11 +17,11 @@ export class Bus{
     @Prop()
     plaque:string
     @Prop()
-    numberSeating:number
+    cantidad:number
     @Prop()
-    fuel:string
+    idUser:string
     @Prop()
-    photo:string
+    photo:string 
     @Prop({type:Boolean, default:true})
     status:boolean
 }

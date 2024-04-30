@@ -9,9 +9,10 @@ export class Horario{
     @Prop({type:String, default: ()=>uuidv4(), unique:true})
     id:string
     @Prop()
+    name:string
+    @Prop()
     horarioIda:Array<
     {
-        name:string,
         place:string,
         firstOut:string
         lastOut:string
@@ -22,7 +23,6 @@ export class Horario{
     @Prop()
     horarioVuelta:Array<
     {
-        name:string,
         place:string,
         firstOut:string
         lastOut:string

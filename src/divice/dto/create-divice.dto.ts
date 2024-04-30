@@ -6,5 +6,9 @@ export class CreateDiviceDto {
     @ApiProperty()
     brand:string
     @ApiProperty()
-    model:string
+    user:string
+    @ApiProperty()
+    key:string
+    @ApiProperty()
+    idUser:string
 }

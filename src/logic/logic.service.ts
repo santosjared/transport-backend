@@ -7,6 +7,7 @@ export class LogicService{
         const earthRadiusKm = 6371;
         const latA = this.degreesToRadians(pointA.latitude);
         const lngA = this.degreesToRadians(pointA.longitude);
+        
         const latB = this.degreesToRadians(pointB.latitude);
         const lngB = this.degreesToRadians(pointB.longitude);
     
@@ -19,7 +20,7 @@ export class LogicService{
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     
         const distance = earthRadiusKm * c;
-        return distance;
+        return this.round(distance);
       }
     
       private degreesToRadians(degrees: number): number {
@@ -27,7 +28,10 @@ export class LogicService{
       }
 
       speed(distance:number, time:number): number {
-        return distance/time
+        if(distance === 0){
+          return 0
+        }
+        return this.round(distance/time)
       }
       time(distance:number, speed:number): number {
         return distance/speed
@@ -50,6 +54,10 @@ export class LogicService{
       Result(pointA:{latitude:number,longitude:number},time:number,id:string)
       {
       
+      }
+      round(decimal:number):number{
+        const x = decimal.toFixed(4)
+        return parseFloat(x)
       }
 }
     

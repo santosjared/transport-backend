@@ -9,15 +9,15 @@ import { Model } from 'mongoose';
 export class LineaService {
   constructor(@InjectModel(Linea.name)private readonly lineModel:Model<LineaDocument>){}
   async create(createLineaDto: CreateLineaDto) {
-    return await this.lineModel.create();
+    return await this.lineModel.create(createLineaDto);
   }
 
-  findAll() {
-    return this.lineModel.find();
+  async findAll() {
+    return await this.lineModel.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} linea`;
+  async findOne(id: number | string) {
+    return await this.lineModel.findOne({id:id});
   }
 
   update(id: number, updateLineaDto: UpdateLineaDto) {

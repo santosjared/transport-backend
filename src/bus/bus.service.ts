@@ -21,7 +21,7 @@ export class BusService {
   }
 
   async findOne(id: string) {
-    return await this.busModel.findById(id)
+    return await this.busModel.findOne({id:id})
   }
 
   async update(id: string, updateBusDto: UpdateBusDto) {
@@ -30,5 +30,8 @@ export class BusService {
 
   async remove(id: string) {
     return this.busModel.findByIdAndUpdate(id,{status:false})
+  }
+  async updateUserId(id:string, userId:string){
+    return this.busModel.findOneAndUpdate({id:id},{idUser:userId})
   }
 }

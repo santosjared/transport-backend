@@ -10,9 +10,9 @@ export class CreateBusDto {
     @ApiProperty()
     plaque:string
     @ApiProperty()
-    numberSeating:number
+    cantidad:number
     @ApiProperty()
-    fuel:string
+    id:string
     @ApiProperty()
     photo:string
 }

@@ -12,9 +12,13 @@ export class Divice{
     name:string
     @Prop()
     brand:string
+    @Prop({unique:true})
+    user:string
     @Prop()
-    model:string
+    key:string
     @Prop()
+    idUser:string
+    @Prop({type:Boolean, default:false})
     connect:boolean
     @Prop({type:Boolean, default:true})
     status:boolean

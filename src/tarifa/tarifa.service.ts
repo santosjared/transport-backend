@@ -16,8 +16,8 @@ export class TarifaService {
     return await this.tarifaModel.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} tarifa`;
+  async findOne(id: number| string) {
+    return await this.tarifaModel.findOne({id:id});
   }
 
   update(id: number, updateTarifaDto: UpdateTarifaDto) {

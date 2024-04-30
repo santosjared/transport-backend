@@ -20,6 +20,9 @@ async function bootstrap() {
   .addTag('divices')
   .addTag('horario')
   .addTag('tarifa')
+  .addTag('linea')
+  .addTag('users')
+  .addTag('choferes')
   .build();
 const document = SwaggerModule.createDocument(app, config);
 SwaggerModule.setup('api', app, document)

@@ -15,6 +15,9 @@ import { CodesModule } from './codes/codes.module';
 import { DiviceModule } from './divice/divice.module';
 import { TarifaModule } from './tarifa/tarifa.module';
 import { LineaModule } from './linea/linea.module';
+import { LocationsModule } from './locations/locations.module';
+import { UsersModule } from './users/users.module';
+import { ChoferesModule } from './choferes/choferes.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -36,6 +39,8 @@ import { LineaModule } from './linea/linea.module';
   DiviceModule,
   TarifaModule,
   LineaModule,
+  UsersModule,
+  ChoferesModule,
 ]
 })
 export class AppModule {}

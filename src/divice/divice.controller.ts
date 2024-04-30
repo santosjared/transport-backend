@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/common';
 import { DiviceService } from './divice.service';
 import { CreateDiviceDto } from './dto/create-divice.dto';
 import { UpdateDiviceDto } from './dto/update-divice.dto';
@@ -24,7 +24,7 @@ export class DiviceController {
     return this.diviceService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() updateDiviceDto: UpdateDiviceDto) {
     return this.diviceService.update(id, updateDiviceDto);
   }
@@ -32,5 +32,10 @@ export class DiviceController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.diviceService.remove(id);
+  }
+  @Put('user/:id')
+  updateUserId(@Body() data:{id:string, userId:string}){
+    const {id,userId} = data
+    this.diviceService.updateUserId(id,userId)
   }
 }

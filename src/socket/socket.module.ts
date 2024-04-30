@@ -8,6 +8,8 @@ import { CodesService } from 'src/codes/codes.service';
 import { Codes, codesSchema } from 'src/codes/schema/codes.schema';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LogicService } from 'src/logic/logic.service';
+import { LocationsService } from 'src/locations/locations.service';
+import { Locations, locactionsSchema } from 'src/locations/schema/locations.schema';
 
 @Module({
   imports:[MongooseModule.forFeature([{
@@ -18,9 +20,13 @@ import { LogicService } from 'src/logic/logic.service';
     name:Codes.name,
     schema:codesSchema
   }]),
+  MongooseModule.forFeature([{
+    name:Locations.name,
+    schema:locactionsSchema
+  }]),
   ScheduleModule.forRoot()
 ],
-  providers: [SocketGateway, SocketService, DiviceService,CodesService, LogicService],
+  providers: [SocketGateway, SocketService, DiviceService,CodesService, LogicService, LocationsService],
   
 })
 export class SocketModule {}

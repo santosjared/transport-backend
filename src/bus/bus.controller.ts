@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, Bind } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, Bind, Put } from '@nestjs/common';
 import { BusService } from './bus.service';
 import { CreateBusDto } from './dto/create-bus.dto';
 import { UpdateBusDto } from './dto/update-bus.dto';
@@ -26,7 +26,7 @@ export class BusController {
     return await this.busService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   async update(@Param('id') id: string, @Body() updateBusDto: UpdateBusDto) {
     return await this.busService.update(id, updateBusDto);
   }
@@ -34,5 +34,10 @@ export class BusController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return await this.busService.remove(id);
+  }
+  @Put('user/:id')
+  async updateIduser (@Body() data:{id:string,userId:string}){
+    const {id,userId}=data
+    return await this.busService.updateUserId(id,userId)
   }
 }

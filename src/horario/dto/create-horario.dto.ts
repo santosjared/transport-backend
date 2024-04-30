@@ -2,9 +2,10 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateHorarioDto {
     @ApiProperty()
+    name:string
+    @ApiProperty()
     horarioIda:Array<
     {
-        name:string,
         place:string,
         firstOut:string
         lastOut:string
@@ -15,7 +16,6 @@ export class CreateHorarioDto {
     @ApiProperty()
     horarioVuelta:Array<
     {
-        name:string,
         place:string,
         firstOut:string
         lastOut:string
