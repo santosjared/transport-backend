@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { HorarioService } from './horario.service';
 import { HorarioController } from './horario.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Horario, horarioSchema } from './schema/horario.schema';
+import { Horario, HorarioSchema } from './schema/horario.schema';
 
 @Module({
   imports:[MongooseModule.forFeature([{
     name:Horario.name,
-    schema:horarioSchema
+    schema:HorarioSchema
   }])],
   controllers: [HorarioController],
   providers: [HorarioService]

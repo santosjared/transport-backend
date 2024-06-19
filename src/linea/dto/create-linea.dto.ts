@@ -4,11 +4,15 @@ export class CreateLineaDto {
     @ApiProperty()
     name:string
     @ApiProperty()
-    route:string
+    road:string
     @ApiProperty()
-    horario:[]
+    horario:string[]
     @ApiProperty()
-    tarifa:[]
+    rate:string[]
     @ApiProperty()
-    buses:[]
+    buses:string[]
+
+    constructor(partial: Partial<CreateLineaDto>) {
+        Object.assign(this, partial);
+    }
 }

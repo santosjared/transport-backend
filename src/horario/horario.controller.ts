@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, Query } from '@nestjs/common';
 import { HorarioService } from './horario.service';
 import { CreateHorarioDto } from './dto/create-horario.dto';
 import { UpdateHorarioDto } from './dto/update-horario.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { FiltersDto } from 'src/utils/filters.dto';
 
 @Controller('horario')
 @ApiTags('horario')
@@ -11,12 +12,12 @@ export class HorarioController {
 
   @Post()
   create(@Body() createHorarioDto: CreateHorarioDto) {
-    return this.horarioService.create(createHorarioDto);
+    return this.horarioService.create(createHorarioDto)
   }
 
   @Get()
-  findAll() {
-    return this.horarioService.findAll();
+  findAll(@Query() filters:FiltersDto) {
+    return this.horarioService.findAll(filters);
   }
 
   @Get(':id')
@@ -24,13 +25,13 @@ export class HorarioController {
     return this.horarioService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() updateHorarioDto: UpdateHorarioDto) {
-    return this.horarioService.update(+id, updateHorarioDto);
+    return this.horarioService.update(id, updateHorarioDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.horarioService.remove(+id);
+    return this.horarioService.remove(id);
   }
 }

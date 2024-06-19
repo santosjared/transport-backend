@@ -4,23 +4,15 @@ export class CreateHorarioDto {
     @ApiProperty()
     name:string
     @ApiProperty()
-    horarioIda:Array<
-    {
-        place:string,
-        firstOut:string
-        lastOut:string
-        days:[],
-        description:string
-    }
-    >
+    place:string
     @ApiProperty()
-    horarioVuelta:Array<
-    {
-        place:string,
-        firstOut:string
-        lastOut:string
-        days:[],
-        description:string
-    }
-    >
+    firstOut:string
+    @ApiProperty()
+    lastOut:string
+    @ApiProperty()
+    days:string[]
+    @ApiProperty()
+    otherDay:string
+    @ApiProperty()
+    description:string
 }

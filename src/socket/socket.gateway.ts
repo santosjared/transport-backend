@@ -1,117 +1,113 @@
 import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect, ConnectedSocket } from '@nestjs/websockets';
 import { SocketService } from './socket.service';
 import { Server, Socket } from 'socket.io';
-import { DiviceService } from 'src/divice/divice.service';
-import { CodesService } from 'src/codes/codes.service';
 import { Cron } from '@nestjs/schedule';
-import { LogicService } from 'src/logic/logic.service';
-import { LocationsService } from 'src/locations/locations.service';
+import { AuthService } from 'src/auth/auth.service';
+import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
+import { Catch, HttpStatus } from '@nestjs/common';
+import { LocationsService } from '../locations/locations.service';
+import { LineaService } from 'src/linea/linea.service';
+import { StatusService } from 'src/status/status.service';
+import { FiltersDto } from 'src/utils/filters.dto';
 
-const seconds = 20;
+const time = 20;//seconds
 @WebSocketGateway({
-  cors:{
-    origin:'*'
+  cors: {
+    origin: '*'
   }
 })
-export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect{
+export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly socketService: SocketService,
-    private readonly diviceService: DiviceService,
-    private readonly codesService:CodesService,
-    private readonly logicService:LogicService,
-    private readonly locationsService:LocationsService,
-    ) {}
+    private readonly authService: AuthService,
+    private readonly locationService:LocationsService,
+    private readonly lineaService: LineaService,
+    private readonly statusService:StatusService
+  ) { }
   @WebSocketServer()
-  server:Server
+  server: Server
   async handleConnection(client: Socket) {
-    console.log('cliente conectado ',client.id)
-    console.log(`Dirección IP del cliente: ${client.handshake.address}`);
+    const filter = {filter:'',skip:0,limit:10}
+    const users = await this.statusService.findAll(filter)
+    await client.emit('updateStatus', users)
+    console.log('cliente conectado ', client.id)
   }
+
   async handleDisconnect(client: Socket) {
     client.disconnect()
     console.log('se desconecto cliente ', client.id)
+    if(client.handshake.query){
+      await this.socketService.updateStatusUser(client.handshake.query.id as string,'signal')
+      const filter = {filter:'',skip:0,limit:10}
+      const users = await this.statusService.findAll(filter)
+      await this.locationService.updateStatus(client.handshake.query.id as string,true)
+      this.server.emit('updateStatus', users)
+      }      
   }
-  
-  @Cron('*/20 * * * * *')
-  handleLocation(){
+  @Cron(`*/${time} * * * * *`)
+  async handleLocation() {
     this.server.emit('getlocation')
-  }
-  convertirCoordenadas(coordenadas) {
-    const [lng, lat, user] = coordenadas;
-    return { lat, lng, user };
-  }
-  cords(coordenadas) {
-    const [latitude, longitude] = coordenadas;
-    return { latitude, longitude};
+    const linea = await this.lineaService.findLinea()
+    this.server.emit('updateLocations',linea)
   }
   @SubscribeMessage('sendLocation')
-  async create(@MessageBody() location: any,@ConnectedSocket() client:Socket) {
-    const cordenates = this.convertirCoordenadas(location)
-    const findUser = await this.locationsService.findUser(cordenates.user)
-    if(findUser){
-      const cordsA=this.cords(findUser.cords)
-      const cordsB = {latitude:cordenates.lat,longitude:cordenates.lng}
-      const distance = this.logicService.Distance(cordsA,cordsB)
-      console.log('a: ',cordsA,"b: ", cordsB,"distancia ",distance)
-      let speed = this.logicService.speed(distance,seconds/3600)
-      const data = {
-        cords:[cordenates.lat,cordenates.lng],
-        speed:speed,
-        distance:distance,
-        user:cordenates.user
+  async create(@MessageBody() message: any, @ConnectedSocket() client: Socket) {
+    // console.log(message)
+    try{
+      if(client.handshake.query.id){
+        this.socketService.logical(message,time)
       }
-      await this.locationsService.update(cordenates.user,data)
-    }else{
-      const cordA =this.cords(location)
-      const distance = this.logicService.Distance(cordA,cordA)
-      const speed = this.logicService.speed(distance,seconds/3600)
-      const data = {
-        cords:[cordenates.lat,cordenates.lng],
-        speed:speed,
-        distance:distance,
-        user:cordenates.user
-      }
-      await this.locationsService.create(data)
+    }catch{
+      return null
     }
-    const locations = await this.locationsService.findAll()
-    this.server.emit('reSedLocation',locations)
+
   }
-  @SubscribeMessage('divice')
-  async device(@MessageBody() data:any,@ConnectedSocket() client:Socket){
-    if(data){
-      const [user, key]=data;
-      const newdata = {user,key}
-      if(await this.diviceService.verifyDiviceCredentials(newdata))
-        {
-          client.emit('resDivice','success')
-          const findUser = await this.diviceService.findUser(user)
-          await this.diviceService.updateStatus(findUser.id,true);  
-          const response = await this.diviceService.findAll()
-          this.server.emit('diviceAll',response)
-        }else{
-          client.emit('resDivice', 'error')
-          client.disconnect()
+  @SubscribeMessage('login')
+  async device(@MessageBody() auth: CreateAuthDto, @ConnectedSocket() client: Socket) {
+    try {
+      const user = await this.authService.validateUser(auth)
+      if (user.statusCode === HttpStatus.FORBIDDEN || user.statusCode === HttpStatus.UNAUTHORIZED) {
+        client.emit('response', user)
+        client.disconnect();
+      } else {
+        const decode:any = this.socketService.verifayToken((user as any).token)
+        if(decode){
+          await this.socketService.updateStatusUser(decode.id,'connected')
+          await this.socketService.create(decode)
+          client.emit('response', user)
+          client.handshake.query.id = decode.id
+          const filter = {filter:'',skip:0,limit:10}
+        const users = await this.statusService.findAll(filter)
+        this.server.emit('updateStatus', users)
         }
-    }else{
-      client.emit('resDivice','error')
+        
+      }
+    } catch {
+      client.emit('response', { message: 'UNAUTHORIZED', statusCode: HttpStatus.UNAUTHORIZED })
       client.disconnect()
     }
   }
-  @SubscribeMessage('datadivice')
-  async dataDivice(){
-    const response = await this.diviceService.findAll()
-    this.server.emit('diviceAll',response)
-  }
-  @SubscribeMessage('disconnectedDivice')
-  async disconnectedDivice(@MessageBody() data:any, @ConnectedSocket() client:Socket){
-    const findUser = await this.diviceService.findUser(data)
-    if(findUser){
-      if(await this.diviceService.updateStatus(findUser.id,false)){
-        client.emit('resdisconnected');
-        client.disconnect();
-        const response = await this.diviceService.findAll();
-        this.server.emit('diviceAll',response);
-      }
+  @SubscribeMessage('logout')
+  async logout(@ConnectedSocket() client:Socket){
+    console.log('logaut')
+    if(client.handshake.query.id){
+      this.locationService.remove(client.handshake.query.id as string)
+      this.socketService.updateStatusUser(client.handshake.query.id as string,'disconnected')
+      client.handshake.query=null
+      const filter = {filter:'',skip:0,limit:10}
+      const users = await this.statusService.findAll(filter)
+      this.server.emit('updateStatus', users)
+      client.disconnect()
     }
+  }
+  @SubscribeMessage('linea')
+  async linea(@MessageBody() filters: FiltersDto, @ConnectedSocket() client: Socket){
+    const users = await this.statusService.findAll(filters)
+      client.emit('updateStatus', users)
+  }
+  @SubscribeMessage('newStatus')
+  async newStatus (){
+    const linea = await this.lineaService.findLinea()
+    this.server.emit('updateLocations',linea)
   }
 }

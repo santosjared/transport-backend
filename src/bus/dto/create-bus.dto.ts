@@ -1,10 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateBusDto {
+
     @ApiProperty()
     trademark:string
     @ApiProperty()
-    model:string
+    model:number
     @ApiProperty()
     type:string
     @ApiProperty()
@@ -12,7 +13,16 @@ export class CreateBusDto {
     @ApiProperty()
     cantidad:number
     @ApiProperty()
-    id:string
-    @ApiProperty()
     photo:string
+    @ApiProperty()
+    ruat:string
+    @ApiProperty()
+    status:string
+
+    chofer:string 
+    location:string
+
+    constructor(partial: Partial<CreateBusDto>) {
+        Object.assign(this, partial);
+    }
 }

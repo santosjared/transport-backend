@@ -15,7 +15,9 @@ export class Locations{
     speed:number
     @Prop()
     distance:number
+    @Prop({type:Boolean, default:false})
+    signal:boolean
     @Prop()
-    user:string
+    userId:string
 }
 export const locactionsSchema = SchemaFactory.createForClass(Locations)

@@ -9,9 +9,7 @@ export class Road {
     @Prop({type:String, default:()=>uuidv4(), required:true})
     id:string
     @Prop({type:Object})
-    geojsonR:any
-    @Prop({type:Object})
-    geojsonS:any
+    geojson:any
     @Prop()
     center:[]
     @Prop()
@@ -22,5 +20,7 @@ export class Road {
     status:boolean
     @Prop({type:Date, default:Date.now})
     createdAt:Date
+    @Prop({type:Boolean, default:false})
+    delete:boolean
 }
 export const roadSchema = SchemaFactory.createForClass(Road)

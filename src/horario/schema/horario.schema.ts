@@ -11,27 +11,19 @@ export class Horario{
     @Prop()
     name:string
     @Prop()
-    horarioIda:Array<
-    {
-        place:string,
-        firstOut:string
-        lastOut:string
-        days:[],
-        description:string
-    }
-    >
+    place:string
     @Prop()
-    horarioVuelta:Array<
-    {
-        place:string,
-        firstOut:string
-        lastOut:string
-        days:[],
-        description:string
-    }
-    >
-    @Prop({type:Boolean, default:true})
-    status:boolean
+    firstOut:string
+    @Prop()
+    lastOut:string
+    @Prop()
+    days:string[]
+    @Prop()
+    otherDay:string
+    @Prop()
+    description:string
+    @Prop({type:Boolean, default:false})
+    delete:boolean
 }
 
-export const horarioSchema = SchemaFactory.createForClass(Horario)
+export const HorarioSchema = SchemaFactory.createForClass(Horario)

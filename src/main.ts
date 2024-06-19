@@ -2,27 +2,26 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import getConfig from './config/environment'
-import { DaysService } from './days/days.service';
+import { RolesService } from './roles/roles.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule,{cors:true});
 
-  const DaySeeder = app.get(DaysService)
-  DaySeeder.Seeders()
+  const Rol = app.get(RolesService)
+  Rol.Seeders()
   const config = new DocumentBuilder()
   .setTitle('autobuses')
   .setDescription('The api for autobuses')
   .setVersion('1.0')
-  .addTag('days')
-  .addTag('drivelicence')
+  .addTag('auth')
   .addTag('bus')
-  .addTag('code')
-  .addTag('divices')
   .addTag('horario')
-  .addTag('tarifa')
+  .addTag('licencia')
   .addTag('linea')
+  .addTag('locations')
+  .addTag('roles')
+  .addTag('tarifa')
   .addTag('users')
-  .addTag('choferes')
   .build();
 const document = SwaggerModule.createDocument(app, config);
 SwaggerModule.setup('api', app, document)
