@@ -4,7 +4,6 @@ import { Model } from "mongoose";
 import { Bus, BusDocmunet } from "src/bus/schema/bus.schema";
 import { Linea, LineaDocument } from "src/linea/schema/linea.schema";
 import { Users, UsersDocument } from "src/users/schema/users.schema";
-import { FiltersDto } from "src/utils/filters.dto";
 
 
 @Injectable()

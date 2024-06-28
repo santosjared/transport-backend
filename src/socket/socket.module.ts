@@ -19,6 +19,12 @@ import { Linea, LineaSchema } from 'src/linea/schema/linea.schema';
 import { StatusService } from 'src/status/status.service';
 import { Horario, HorarioSchema } from 'src/horario/schema/horario.schema';
 import { Rate, rateSchema } from 'src/rate/schema/rate.schema';
+import { Road } from 'src/road/entities/road.entity';
+import { RoadSchema } from 'src/road/schema/road.schema';
+import { Permission, PermissionSchema } from 'src/permission/schema/permission.schema';
+import { Components, ComponentsSchma } from 'src/componentes/schema/componentes';
+import { Rol, rolSchema } from 'src/roles/schema/roles.schema';
+import { AccesRules, AccesRulesSchema } from 'src/roles/schema/accessrules';
 
 @Module({
   imports: [
@@ -57,6 +63,26 @@ import { Rate, rateSchema } from 'src/rate/schema/rate.schema';
     MongooseModule.forFeature([{
       name:Rate.name,
       schema:rateSchema
+    }]),
+    MongooseModule.forFeature([{
+      name:Road.name,
+      schema:RoadSchema
+    }]),
+    MongooseModule.forFeature([{
+      name:Permission.name,
+      schema:PermissionSchema
+    }]),
+    MongooseModule.forFeature([{
+      name:Components.name,
+      schema:ComponentsSchma
+    }]),
+    MongooseModule.forFeature([{
+      name:Rol.name,
+      schema:rolSchema
+    }]),
+    MongooseModule.forFeature([{
+      name:AccesRules.name,
+      schema:AccesRulesSchema
     }]),
     ScheduleModule.forRoot()
   ],

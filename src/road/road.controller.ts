@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put, UsePipes, ValidationPipe, ValidationError } from '@nestjs/common';
 import { RoadService } from './road.service';
 import { CreateRoadDto } from './dto/create-road.dto';
 import { UpdateRoadDto } from './dto/update-road.dto';
@@ -11,6 +11,32 @@ export class RoadController {
   constructor(private readonly roadService: RoadService) {}
 
   @Post()
+  
+  @Post()
+  @UsePipes(new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    exceptionFactory: (errors: ValidationError[]) => {
+      const formatErrors = (errs: ValidationError[], parent = '') => {
+        return errs.reduce((acc, err) => {
+          const property = parent ? `${parent}.${err.property}` : err.property;
+          if (err.children && err.children.length > 0) {
+            acc = { ...acc, ...formatErrors(err.children, parent ? parent : err.property) };
+          } else {
+            acc[err.property] = Object.values(err.constraints || {}).join(', ');
+          }
+          return acc;
+        }, {});
+      };
+
+      const formattedErrors = formatErrors(errors);
+      return {
+        statusCode: 400,
+        message: formattedErrors,
+      };
+    },
+  }))
   async create(@Body() createRoadDto: CreateRoadDto) {
     return this.roadService.create(createRoadDto);
   }
@@ -26,6 +52,30 @@ export class RoadController {
   }
 
   @Put(':id')
+  @UsePipes(new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    exceptionFactory: (errors: ValidationError[]) => {
+      const formatErrors = (errs: ValidationError[], parent = '') => {
+        return errs.reduce((acc, err) => {
+          const property = parent ? `${parent}.${err.property}` : err.property;
+          if (err.children && err.children.length > 0) {
+            acc = { ...acc, ...formatErrors(err.children, parent ? parent : err.property) };
+          } else {
+            acc[err.property] = Object.values(err.constraints || {}).join(', ');
+          }
+          return acc;
+        }, {});
+      };
+
+      const formattedErrors = formatErrors(errors);
+      return {
+        statusCode: 400,
+        message: formattedErrors,
+      };
+    },
+  }))
   async update(@Param('id') id: string, @Body() updateRoadDto: UpdateRoadDto) {
     return this.roadService.update(id, updateRoadDto);
   }

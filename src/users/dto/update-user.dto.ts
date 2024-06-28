@@ -29,7 +29,7 @@ export class UpdateUserDto{
 
     @ApiProperty()
     @IsString()
-    country: string;
+    contry: string;
 
     @ApiProperty()
 

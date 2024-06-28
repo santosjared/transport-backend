@@ -1,9 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Auth, AuthDocument } from './schema/auth.schema';
 import { Model } from 'mongoose';
+import * as jwt from 'jsonwebtoken';
+import getConfig from 'src/config/environment'
 import { hasCompare, hashCrypto } from 'src/utils/crypto';
 import { Users, UsersDocument } from 'src/users/schema/users.schema';
 import { JwtService } from '@nestjs/jwt';
@@ -39,20 +41,34 @@ export class AuthService {
       if (!emailUser) return { menssage: 'EMAIL_INVALID', statusCode: HttpStatus.FORBIDDEN };
       const passhas = await hasCompare(password, emailUser.password);
       if (!passhas) return { menssage: 'PASSWORD_INVALID', statusCode: HttpStatus.FORBIDDEN };
-      const user = await this.userModel.findOne({ email, delete:false })
+      const user = await this.userModel.findOne({ email, delete: false })
+  .populate({
+    path: 'rol',
+    populate: [
+      { path: 'access.componente',model:'Components' },
+      { path: 'access.permisos', model:'Permission' }
+    ]
+  }).exec();
       if (!user) return { menssage: 'USER_NOT_EXISTS', statusCode: HttpStatus.UNAUTHORIZED };
       return this.sesionToken(user);
     } catch {
-      return { menssage: 'PASSWORD_INVALID', statusCode: HttpStatus.FORBIDDEN };
+    return { menssage: 'PASSWORD_INVALID', statusCode: HttpStatus.FORBIDDEN };
     }
   }
   private async sesionToken(user: any) {
-    
      try {
-      const payload = { id: user.id, _id:user._id,name:user.name, lastName: user.lastName };
+      const payload = { id: user.id, _id:user._id,name:user.name, lastName: user.lastName, rol:user.rol?user.rol.name:null, access:user.rol?user.rol.access:null };
       return { token: this.jwtService.sign(payload), statusCode:HttpStatus.CREATED }
     } catch {
       return { menssage: 'ERROR_IN_GENERATE_TOKEN', statusCode: HttpStatus.UNAUTHORIZED }
+    }
+  }
+  verifayToken(token: string) {
+    try {
+      const decode = jwt.verify(token, getConfig().token_Secret)
+      return decode;
+    } catch {
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
   }
 }

@@ -15,38 +15,58 @@ export class RoadService {
     if(!errorMessages){
       return await this.roadModel.create(createRoadDto);
     }
-    throw new HttpException(errorMessages, HttpStatus.BAD_REQUEST);
+    throw new HttpException({message:errorMessages}, HttpStatus.BAD_REQUEST);
   }
 
-  async findAll(filters: FiltersDto) {
-    const { filter, skip, limit } = filters
-    const regexPattern = new RegExp(filter, 'i');
-    const columnsToSearch = ['name', 'rates'];
-
-    const orConditions = columnsToSearch.map(column => ({
-      [column]: { $regex: regexPattern }
-    }));
-
-    if (skip && limit) {
-      const result = await this.roadModel.find({$or:orConditions,delete:false}).skip(skip).limit(limit).exec();
-      const total = await this.roadModel.countDocuments({$or:orConditions,delete:false})
-      return { result, total }
-    }
-    const result = await this.roadModel.find({$or:orConditions,delete:false}).exec();
-    const total = await this.roadModel.countDocuments({$or:orConditions,delete:false})
-    return { result, total }
+  async findAll(filters: any) {
+    {
+      if (filters) {
+        const { filter, skip, limit } = filters;
+        const searchFilters = { delete: false };
+      
+        if (filter) {
+          if (filter.name) {
+            searchFilters['name'] = { $regex: new RegExp(filter.name, 'i') };
+          }
+      
+          if (filter.createdAt) {
+            const date = filter.createdAt;
+            const startDate = new Date(`${date}T00:00:00.000Z`);
+            const endDate = new Date(`${date}T23:59:59.999Z`);
+            searchFilters['createdAt'] = {
+              $gte: startDate,
+              $lte: endDate
+            };
+          }
+        }
+      
+        if (skip !== undefined && limit !== undefined) {
+          const result = await this.roadModel.find(searchFilters).skip(skip).limit(limit).exec();
+          const total = await this.roadModel.countDocuments(searchFilters);
+          return { result, total };
+        }
+      
+        const result = await this.roadModel.find(searchFilters);
+        const total = await this.roadModel.countDocuments(searchFilters);
+        return { result, total };
+      }
+          
+       const result = await this.roadModel.find({delete:false})
+        const total = await this.roadModel.countDocuments({delete:false})
+        return { result, total }
   }
+}
 
   async findOne(id: string) {
     return await this.roadModel.findOne({id:id}) ;
   }
 
   async update(id: string, updateRoadDto: UpdateRoadDto) {
-    const errorMessages= await this.isValidData(updateRoadDto)
+    const errorMessages= await this.isValidData(updateRoadDto,true,id)
     if(!errorMessages){
       return await this.roadModel.findOneAndUpdate({id},updateRoadDto);
     }
-    throw new HttpException(errorMessages, HttpStatus.BAD_REQUEST);
+    throw new HttpException({message:errorMessages}, HttpStatus.BAD_REQUEST);
   }
 
   async remove(id: string) {
@@ -57,14 +77,24 @@ export class RoadService {
       throw new NotFoundException('tarifa no encontrado');
     }
   }
-  async isValidData(createRoadDto: CreateRoadDto | UpdateRoadDto, update?:boolean){
+  async isValidData(createRoadDto: CreateRoadDto | UpdateRoadDto, update?:boolean, id?:string){
     const message={
       name:''
     }
     let isError = false
-    if(!createRoadDto.name){
-      isError = true
-      message.name='el campo nombre de la ruta es requerido'
+    if (createRoadDto.name && !update) {
+      const rate = await this.roadModel.findOne({ name: createRoadDto.name })
+      if (rate) {
+        isError = true
+        message.name = 'El nombre de tarifa ya se encuentra registrado'
+      }
+    }
+    if (createRoadDto.name && update) {
+      const rate = await this.roadModel.findOne({ name: createRoadDto.name, id: { $ne: id } })
+      if (rate) {
+        isError = true
+        message.name = 'El nombre de tarifa ya se encuentra registrado'
+      }
     }
     if(isError){
       return message

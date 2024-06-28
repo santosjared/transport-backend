@@ -17,24 +17,41 @@ export class RateService {
     throw new HttpException(errorMessages, HttpStatus.BAD_REQUEST);
   }
 
-  async findAll(filters: FiltersDto) {
-    const { filter, skip, limit } = filters
-    const regexPattern = new RegExp(filter, 'i');
-    const columnsToSearch = ['name', 'rates'];
-
-    const orConditions = columnsToSearch.map(column => ({
-      [column]: { $regex: regexPattern }
-    }));
-
-    if (skip && limit) {
-      const result = await this.tarifaModel.find({$or:orConditions,delete:false}).skip(skip).limit(limit).exec();
-      const total = await this.tarifaModel.countDocuments({$or:orConditions,delete:false})
-      return { result, total }
+  async findAll(filters: any) {
+    if (filters) {
+      const { filter, skip, limit } = filters;
+      const searchFilters = { delete: false };
+    
+      if (filter) {
+        if (filter.name) {
+          searchFilters['name'] = { $regex: new RegExp(filter.name, 'i') };
+        }
+    
+        if (filter.createdAt) {
+          const date = filter.createdAt;
+          const startDate = new Date(`${date}T00:00:00.000Z`);
+          const endDate = new Date(`${date}T23:59:59.999Z`);
+          searchFilters['createdAt'] = {
+            $gte: startDate,
+            $lte: endDate
+          };
+        }
+      }
+    
+      if (skip !== undefined && limit !== undefined) {
+        const result = await this.tarifaModel.find(searchFilters).skip(skip).limit(limit).exec();
+        const total = await this.tarifaModel.countDocuments(searchFilters);
+        return { result, total };
+      }
+    
+      const result = await this.tarifaModel.find(searchFilters);
+      const total = await this.tarifaModel.countDocuments(searchFilters);
+      return { result, total };
     }
-    const result = await this.tarifaModel.find({$or:orConditions,delete:false}).exec();
-    const total = await this.tarifaModel.countDocuments({$or:orConditions,delete:false})
-    return { result, total }
-
+        
+     const result = await this.tarifaModel.find({delete:false})
+      const total = await this.tarifaModel.countDocuments({delete:false})
+      return { result, total }
   }
 
   async findOne(id:string) {
@@ -42,7 +59,7 @@ export class RateService {
   }
 
   async update(id: string, updateRateDto: UpdateRateDto) {
-    const errorMessages= await this.isValidData(updateRateDto)
+    const errorMessages= await this.isValidData(updateRateDto, true,id)
     if(!errorMessages){
       return await this.tarifaModel.findOneAndUpdate({id},updateRateDto);
     }
@@ -57,7 +74,7 @@ export class RateService {
       throw new NotFoundException('tarifa no encontrado');
     }
   }
-  async isValidData(createRateDto: CreateRateDto | UpdateRateDto, update?:boolean){
+  async isValidData(createRateDto: CreateRateDto | UpdateRateDto, update?:boolean, id?:string){
     const message={
       name:'',
       tipo:'',
@@ -70,8 +87,21 @@ export class RateService {
     }
     if(createRateDto.rates.length===0){
       isError = true
-      message.tipo =  'el campo Tipo tarifa es requerido'
       message.tipo =  'el campo Tarifa es requerido'
+    }
+    if(createRateDto.name && !update){
+      const rate = await this.tarifaModel.findOne({name:createRateDto.name})
+      if(rate){
+        isError = true
+        message.name = 'El nombre de tarifa ya se encuentra registrado'
+      }
+    }
+    if(createRateDto.name && update){
+      const rate = await this.tarifaModel.findOne({name:createRateDto.name, id: { $ne: id }})
+      if(rate){
+        isError = true
+        message.name = 'El nombre de tarifa ya se encuentra registrado'
+      }
     }
     createRateDto.rates.map((values:{tipo:string,tarifa:string})=>{
       if(values.tarifa && values.tipo){
@@ -94,7 +124,6 @@ export class RateService {
         }
       }else{
         isError = true
-        message.tipo =  'el campo Tipo tarifa es requerido'
         message.tipo =  'el campo Tarifa es requerido'
       }
     })

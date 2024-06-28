@@ -10,9 +10,6 @@ export type UsersDocument = HydratedDocument <Users>
 
 @Schema()
 export class Users {
-    tostring(): mongoose.Condition<mongoose.Types.ObjectId> {
-      throw new Error('Method not implemented.');
-    }
     @Prop({type:String, default:()=>uuid()})
     id:string
     @IsString()
@@ -59,8 +56,8 @@ export class Users {
     @IsDate()
     @Prop({type:Date || null, default:null})
     lastConnect:Date | null
-    @Prop({type:[{type:mongoose.Schema.Types.ObjectId, ref:'Rol', default:null}]})
-    rol:Rol[]
+    @Prop({type:mongoose.Schema.Types.ObjectId, ref:'Rol', default:null})
+    rol:Rol
     @Prop({type:mongoose.Schema.Types.ObjectId, ref:'LicenceDriver', default:null})
     licenceId:LicenceDriver
     

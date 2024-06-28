@@ -28,7 +28,7 @@ export class CreateUserDto {
 
     @ApiProperty()
     @IsString()
-    country: string;
+    contry: string;
 
     @ApiProperty()
 
@@ -43,6 +43,7 @@ export class CreateUserDto {
     @Length(6, 20)
     password: string;
 
+    rol?:string
     delete?:boolean
 
     constructor(partial: Partial<CreateUserDto>) {

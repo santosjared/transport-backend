@@ -8,14 +8,27 @@ import { AuthService } from 'src/auth/auth.service';
 import { UsersMessageError } from 'src/utils/messages/useres-message.error';
 import { FiltersDto } from 'src/utils/filters.dto';
 import { Bus, BusDocmunet } from 'src/bus/schema/bus.schema';
+import { last } from 'rxjs';
+import { ComponentsSeeder, RolSeeder, permissionSeeder } from 'src/seeders/rol.seeder';
+import { Rol, RolDocument } from 'src/roles/schema/roles.schema';
+import { ComponentSDocument, Components } from 'src/componentes/schema/componentes';
+import { Permission, PermissionDocument } from 'src/permission/schema/permission.schema';
+import { IsEmptyDB } from 'src/utils/isEmptyDB';
+import { Auth, AuthDocument } from 'src/auth/schema/auth.schema';
+import { AccesRules, AccesRulesDocument } from 'src/roles/schema/accessrules';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(Users.name) private readonly userModel: Model<UsersDocument>,
     private authService: AuthService,
-    @InjectModel(Bus.name) private readonly busModel:Model<BusDocmunet>
+  @InjectModel(Rol.name) private readonly rolModel: Model<RolDocument>,
+  @InjectModel(Components.name) private readonly ComponentsModel: Model<ComponentSDocument>,
+  @InjectModel(Permission.name) private readonly permissionModel:Model<PermissionDocument>,
+  @InjectModel(Bus.name) private readonly busModel:Model<BusDocmunet>,
+  @InjectModel(Auth.name) private readonly authModel:Model<AuthDocument>,
+  @InjectModel(AccesRules.name) private readonly accesRulesModel:Model<AccesRulesDocument>
   ) { }
-  async create(createUserDto: CreateUserDto, file: Express.Multer.File) {
+  async create(createUserDto: CreateUserDto, file?: Express.Multer.File) {
     const { email, password, ci } = createUserDto
     const dbEmail = await this.userModel.findOne({ email })
     if (dbEmail) {
@@ -52,7 +65,6 @@ export class UsersService {
     return await this.userModel.create(createUserDto);
 
   }
-
   async findAll(filters: any) {
     if(filters){
       const {filter,skip,limit}=filters
@@ -183,6 +195,59 @@ export class UsersService {
     })
       return { result, total }
   }
-   
+
+  async DefaultCreateUser(){
+    if(await IsEmptyDB(this.permissionModel)) {await permissionSeeder(this.permissionModel)}
+    if(await IsEmptyDB(this.ComponentsModel)) {await ComponentsSeeder(this.ComponentsModel)}
+    const defaultUser = await this.userModel.findOne({email:'adminbus@gmail.com'})
+    if(!defaultUser){
+      const permission = await this.permissionModel.find()
+    const permisionID = permission.map((permiso)=>{
+      return permiso._id.toString();
+    })
+    const componentes = await this.ComponentsModel.find()
+    const componetsId = componentes.map((componente)=>{
+      return componente._id.toString();
+    })
+
+    const acces= componetsId.map((value)=>{
+      return {
+        componente:value, permisos:permisionID
+      }
+    })
+
+    const accessPromises = componentes.map(async (value) => {
+
+    });
+  
+    const rolData = {
+      name:'Administrador',
+      access:acces
+    }
+    const rol = await this.rolModel.create(rolData)
+    const userData = {
+      name:'super',
+      lastName:'admin',
+      gender:'Ninguno',
+      ci:'Ninguno',
+      phone:'Ninguno',
+      address:'Ninguno',
+      contry:'Niguno',
+      email:'adminbus@gmail.com',
+      profile:'',
+      password:'adminbus',
+      rol:rol._id.toString()
+    }
+    const user = await this.create(userData)
+    const upateRol = await this.rolModel.findOneAndUpdate({name:'Administrador'},{Users:[user._id.toString()]})
+    }
+  }
+  async usersNotRol(){
+    return await this.userModel.find({rol:null})
+  }
+   async asignedRol(id:string,idrol:{idrol:string}){
+     const role = await this.rolModel.findByIdAndUpdate(idrol.idrol,{ $addToSet: { Users: { $each:[id.toString()] } } })
+    return await this.userModel.findByIdAndUpdate(id,{rol:idrol.idrol})
+   }
  }
 

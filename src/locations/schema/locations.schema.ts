@@ -12,6 +12,8 @@ export class Locations{
     @Prop()
     cords:number[]
     @Prop()
+    oldcords:number[]
+    @Prop()
     speed:number
     @Prop()
     distance:number

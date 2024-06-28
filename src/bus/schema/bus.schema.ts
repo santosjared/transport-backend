@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import mongoose, { HydratedDocument } from "mongoose";
 import { Locations } from "src/locations/schema/locations.schema";
+import { Road } from "src/road/schema/road.schema";
 import { Users } from "src/users/schema/users.schema";
 import {v4 as uuidv4} from 'uuid'
 
@@ -31,6 +32,8 @@ export class Bus{
     userId:Users
     @Prop({type:mongoose.Schema.Types.ObjectId, ref:'Locations', default:null}) 
     locationId:Locations
+    @Prop({type:mongoose.Schema.Types.ObjectId, ref:'Road', default:null})
+    road:Road
     @Prop({type:Boolean, default:false})
     delete:boolean
 }

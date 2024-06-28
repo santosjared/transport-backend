@@ -17,6 +17,7 @@ const time = 20;//seconds
   }
 })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  private clients: Map<string, any> = new Map();
   constructor(
     private readonly socketService: SocketService,
     private readonly authService: AuthService,
@@ -42,7 +43,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const users = await this.statusService.findAll(filter)
       await this.locationService.updateStatus(client.handshake.query.id as string,true)
       this.server.emit('updateStatus', users)
-      }      
+      }
+      this.clients.delete(client.id);       
   }
   @Cron(`*/${time} * * * * *`)
   async handleLocation() {
@@ -52,7 +54,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
   @SubscribeMessage('sendLocation')
   async create(@MessageBody() message: any, @ConnectedSocket() client: Socket) {
-    // console.log(message)
+    console.log(message)
     try{
       if(client.handshake.query.id){
         this.socketService.logical(message,time)
@@ -91,8 +93,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async logout(@ConnectedSocket() client:Socket){
     console.log('logaut')
     if(client.handshake.query.id){
-      this.locationService.remove(client.handshake.query.id as string)
-      this.socketService.updateStatusUser(client.handshake.query.id as string,'disconnected')
+      await this.locationService.remove(client.handshake.query.id as string)
+      await this.socketService.updateStatusUser(client.handshake.query.id as string,'disconnected')
       client.handshake.query=null
       const filter = {filter:'',skip:0,limit:10}
       const users = await this.statusService.findAll(filter)
@@ -109,5 +111,11 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async newStatus (){
     const linea = await this.lineaService.findLinea()
     this.server.emit('updateLocations',linea)
+  }
+
+  @SubscribeMessage('nearbus')  
+  async nearbus(@MessageBody() location:{ latitude:number, longitude:number }, @ConnectedSocket() client: Socket){
+    const nearBus = await this.socketService.nearBus(location)
+    client.emit('buses', nearBus)
   }
 }

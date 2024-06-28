@@ -1,15 +1,18 @@
+// horario.module.ts
 import { Module } from '@nestjs/common';
-import { HorarioService } from './horario.service';
-import { HorarioController } from './horario.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Horario, HorarioSchema } from './schema/horario.schema';
+import { HorarioController } from './horario.controller';
+import { HorarioService } from './horario.service';
+import { RolesModule } from '../roles/roles.module';  // Asegúrate de importar RolesModule
+import { HorarioSchema } from './schema/horario.schema';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
-  imports:[MongooseModule.forFeature([{
-    name:Horario.name,
-    schema:HorarioSchema
-  }])],
+  imports: [
+    MongooseModule.forFeature([{ name: 'Horario', schema: HorarioSchema }]),
+    RolesModule,  // Importa RolesModule aquí
+  ],
   controllers: [HorarioController],
-  providers: [HorarioService]
+  providers: [HorarioService,JwtService],
 })
 export class HorarioModule {}

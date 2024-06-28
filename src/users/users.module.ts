@@ -5,9 +5,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Users, UsersSchema } from './schema/users.schema';
 import { MulterModule } from '@nestjs/platform-express';
 import { AuthService } from 'src/auth/auth.service';
-import { Auth, authSchema } from 'src/auth/schema/auth.schema';
 import { JwtService } from '@nestjs/jwt';
 import { Bus, busSchema } from 'src/bus/schema/bus.schema';
+import { Auth, authSchema } from 'src/auth/schema/auth.schema';
+import { Permission, PermissionSchema } from 'src/permission/schema/permission.schema';
+import { Components, ComponentsSchma } from 'src/componentes/schema/componentes';
+import { Rol, rolSchema } from 'src/roles/schema/roles.schema';
+import { AccesRules, AccesRulesSchema } from 'src/roles/schema/accessrules';
 
 @Module({
   imports:[MongooseModule.forFeature([{
@@ -21,6 +25,22 @@ import { Bus, busSchema } from 'src/bus/schema/bus.schema';
   MongooseModule.forFeature([{
     name:Bus.name,
     schema:busSchema
+  }]),
+  MongooseModule.forFeature([{
+    name:Permission.name,
+    schema:PermissionSchema
+  }]),
+  MongooseModule.forFeature([{
+    name:Components.name,
+    schema:ComponentsSchma
+  }]),
+  MongooseModule.forFeature([{
+    name:Rol.name,
+    schema:rolSchema
+  }]),
+  MongooseModule.forFeature([{
+    name:AccesRules.name,
+    schema:AccesRulesSchema
   }]),
   MulterModule.register({
     dest:'./uploads'

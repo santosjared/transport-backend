@@ -17,9 +17,9 @@ export class Linea{
     name:string
     @Prop({type:Number, default:0})
     request:number
-    @Prop({type:mongoose.Schema.Types.ObjectId, ref:'Road'})
-    road:Road
-    @Prop({type:[{type:mongoose.Schema.Types.ObjectId,ref:'Horario'}]})
+    @Prop({type:[{type:mongoose.Schema.Types.ObjectId, ref:'Road'}]})
+    road:Road[]
+    @Prop({type:[{type:mongoose.Schema.Types.ObjectId, ref:'Horario'}]})
     horario:Horario[]
     @Prop({type:[{type:mongoose.Schema.Types.ObjectId, ref:'Rate'}]})
     rate:Rate[]

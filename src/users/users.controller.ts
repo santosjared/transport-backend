@@ -29,6 +29,10 @@ export class UsersController {
   async findUnser(@Query() filters:FiltersDto){
     return await this.usersService.findUser(filters)
   }
+  @Get('notroles')
+  async NotRol(){
+    return await this.usersService.usersNotRol()
+  }
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.usersService.findOne(id);
@@ -38,6 +42,12 @@ export class UsersController {
   @UseInterceptors(FileInterceptor('profile'))
   update(@Param('id') id: string,@UploadedFile() file:Express.Multer.File, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto, file);
+  }
+
+  @Put('asignedrol/:id')
+  asignedRol(@Param('id') id: string, @Body() idrol: {idrol:string}) {
+    // console.log(idrol)
+    return this.usersService.asignedRol(id, idrol);
   }
 
   @Delete(':id')

@@ -17,9 +17,11 @@ export class Horario{
     @Prop()
     lastOut:string
     @Prop()
-    days:string[]
+    frequency:number
     @Prop()
-    otherDay:string
+    time:string
+    @Prop()
+    days:string[]
     @Prop()
     description:string
     @Prop({type:Boolean, default:false})

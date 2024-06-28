@@ -6,7 +6,6 @@ import { Bus } from './entities/bus.entity';
 import { Model } from 'mongoose';
 import { BusDocmunet } from './schema/bus.schema';
 import { AsigneDriverDto } from './dto/asigne-driver.dto';
-import { FiltersDto } from 'src/utils/filters.dto';
 import * as fs from 'fs';
 import { Users, UsersDocument } from 'src/users/schema/users.schema';
 
@@ -18,6 +17,7 @@ export class BusService {
   async create(createBusDto: CreateBusDto, files: { photo?: Express.Multer.File[], ruat?: Express.Multer.File[] }) {
     const errorMessages = await this.isValidData(createBusDto)
     if (!errorMessages) {
+      createBusDto.ruat=null
       if (files) {
         const { photo, ruat } = files;
         if (photo && ruat) {
@@ -77,23 +77,43 @@ export class BusService {
           }
         }
         if (filter.status) {
-          searchFilters['status'] = { $regex: new RegExp(filter.status, 'i') };
+          searchFilters['status'] = filter.status
         }
         if (filter.ruat) {
-          searchFilters['ruat'] = { $regex: new RegExp(filter.ruat, 'i') };
+          if(filter.ruat === 'notdocument'){
+            searchFilters['ruat'] = { $eq: null };
+          }else{
+            searchFilters['ruat'] = { $ne: null }
+          }
+        }
+        if (filter.userId) {
+          const userId = filter.userId ? filter.userId.trim() : '';
+          const words = userId ? userId.split(' ') : [];
+          const columnsToSearch = ['name', 'lastName', 'ci'];
+
+          const orConditions = words.length > 0
+            ? words.flatMap(word => columnsToSearch.map(column => ({
+              [column]: { $regex: new RegExp(word, 'i') }
+            })))
+            : [];
+          const datafilter = await this.busModel.find({delete:false})
+            .populate({
+              path: 'userId',
+              match: orConditions.length ? { $or: orConditions, delete:false } : {},
+              model: 'Users',
+              populate: { path: 'licenceId', model: 'LicenceDriver' }
+            })
+            .populate('locationId')
+
+            const result = datafilter.filter(bus => bus.userId);
+            return {result, total:result.length}
         }
       }
-      const regexPattern = filter.userId ? new RegExp(filter.userId, 'i') : null;
-      const columnsToSearch = ['name', 'lastName', 'ci'];
-      const orConditions = regexPattern ? columnsToSearch.map(column => ({
-        [column]: { $regex: regexPattern }
-      })) : [];
 
       if (skip !== undefined && limit !== undefined) {
         const result = await this.busModel.find(searchFilters)
           .populate({
             path: 'userId',
-            match: orConditions.length ? { $or: orConditions } : {},
             model: 'Users',
             populate: { path: 'licenceId', model: 'LicenceDriver' }
           })
@@ -116,36 +136,6 @@ export class BusService {
       .populate('locationId').exec();
     const total = await this.busModel.countDocuments({ delete: false })
     return { result, total }
-
-    //   const { filter, skip, limit } = filters
-    //   const columnsToSearch = ['trademark','type', 'plaque'];
-    //   const filterNumber = parseFloat(filter);
-    //   const isFilterNumber = !isNaN(filterNumber);
-
-    //   if (isFilterNumber) {
-    //       columnsToSearch.push('model');
-    //       columnsToSearch.push('cantidad');
-    //   }
-
-    //   const orConditions = columnsToSearch.map(column => {
-    //     if (isFilterNumber && (column === 'cantidad' || column === 'model')) {
-    //         return { [column]: filterNumber };
-    //     } else {
-    //         return { [column]: new RegExp(filter, 'i') };
-    //     }
-    // });
-    // if (skip !== undefined && limit !== undefined) {
-    //     const result = await this.busModel.find({$or:orConditions,delete:false})
-    //     .populate({path:'userId',model:'Users',populate:{path:'licenceId', model:'LicenceDriver'}})
-    //     .populate('locationId').skip(skip).limit(limit).exec();
-    //     const total = await this.busModel.countDocuments({$or:orConditions,delete:false})
-    //     return { result, total }
-    //   }
-    //   const result = await this.busModel.find({$or:orConditions,delete:false})
-    //   .populate({path:'userId',model:'Users',populate:{path:'licenceId', model:'LicenceDriver'}})
-    //   .populate('locationId').exec();
-    //   const total = await this.busModel.countDocuments({$or:orConditions,delete:false})
-    //   return { result, total }
   }
 
   async findOne(id: string) {
