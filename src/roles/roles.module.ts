@@ -9,14 +9,12 @@ import { Components, ComponentsSchma } from 'src/componentes/schema/componentes'
 import { Permission, PermissionSchema } from 'src/permission/schema/permission.schema';
 import { RolesGuard } from '../roles/guards/rols.guard';
 import { APP_GUARD } from '@nestjs/core';
-import { AccesRules, AccesRulesSchema } from './schema/accessrules';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Rol.name, schema: rolSchema }]),
     MongooseModule.forFeature([{ name: Components.name, schema: ComponentsSchma }]),
     MongooseModule.forFeature([{ name: Permission.name, schema: PermissionSchema }]),
-    MongooseModule.forFeature([{ name: AccesRules.name, schema: AccesRulesSchema }]),
   ],
   controllers: [RolesController],
   providers: [

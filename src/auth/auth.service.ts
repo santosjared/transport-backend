@@ -3,7 +3,7 @@ import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Auth, AuthDocument } from './schema/auth.schema';
-import { Model } from 'mongoose';
+import { Model, model } from 'mongoose';
 import * as jwt from 'jsonwebtoken';
 import getConfig from 'src/config/environment'
 import { hasCompare, hashCrypto } from 'src/utils/crypto';
@@ -41,14 +41,7 @@ export class AuthService {
       if (!emailUser) return { menssage: 'EMAIL_INVALID', statusCode: HttpStatus.FORBIDDEN };
       const passhas = await hasCompare(password, emailUser.password);
       if (!passhas) return { menssage: 'PASSWORD_INVALID', statusCode: HttpStatus.FORBIDDEN };
-      const user = await this.userModel.findOne({ email, delete: false })
-  .populate({
-    path: 'rol',
-    populate: [
-      { path: 'access.componente',model:'Components' },
-      { path: 'access.permisos', model:'Permission' }
-    ]
-  }).exec();
+      const user = await this.userModel.findOne({ email, delete: false }).populate({path:'rol', model:'Rol',populate:{path:'access',model:'Components'}}).exec();
       if (!user) return { menssage: 'USER_NOT_EXISTS', statusCode: HttpStatus.UNAUTHORIZED };
       return this.sesionToken(user);
     } catch {

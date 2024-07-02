@@ -286,4 +286,7 @@ export class BusService {
     }
     return null
   }
+  async busroad(id:string){
+    return await this.busModel.findOne({road:id})
+  }
 }

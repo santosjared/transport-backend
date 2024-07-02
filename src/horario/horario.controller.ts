@@ -30,13 +30,11 @@ export class HorarioController {
       };
     },
   }))
-  @Permissions('Crear')
   create(@Body() createHorarioDto: CreateHorarioDto) {
     return this.horarioService.create(createHorarioDto)
   }
 
   @Get()
-  @Permissions('Listar')
   findAll(@Query() filters:FiltersDto) {
     return this.horarioService.findAll(filters);
   }

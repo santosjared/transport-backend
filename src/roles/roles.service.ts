@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -9,50 +9,56 @@ import { RolSeeder } from 'src/seeders/rol.seeder';
 import { Role } from './entities/role.entity';
 import { ComponentSDocument, Components } from 'src/componentes/schema/componentes';
 import { Permission, PermissionDocument } from 'src/permission/schema/permission.schema';
-import { AccesRules, AccesRulesDocument } from './schema/accessrules';
 
 @Injectable()
 export class RolesService {
   constructor(@InjectModel(Rol.name) private readonly rolModel: Model<RolDocument>,
     @InjectModel(Components.name) private readonly componentsModel: Model<ComponentSDocument>,
     @InjectModel(Permission.name) private readonly permissionModel: Model<PermissionDocument>,
-    @InjectModel(AccesRules.name) private readonly accesRulesModel:Model<AccesRulesDocument>
   ) { }
   async create(createRoleDto: CreateRoleDto) {
-
-    const acces= createRoleDto.access.map((value)=>{
-      return {
-        componente:value.accessId, permisos:value.permissionIds
-      }
-    })
-
-     const newRole = await this.rolModel.create({ name: createRoleDto.name, access: acces });
-    
-    return newRole;
+    if(!createRoleDto.name){
+      throw new HttpException({message:{name:'El Campo nombre del rol es requerido'}}, HttpStatus.BAD_REQUEST);
+    }
+    const name = await this.rolModel.findOne({name:createRoleDto.name})
+    if(name){
+      throw new HttpException({message:{name:'El nombre de rol ya se ecuentra registrado'}}, HttpStatus.BAD_REQUEST);
+    }
+    return await this.rolModel.create(createRoleDto)
   }
   async findAll(filters: string): Promise<Role[]> {
     const regexPattern = new RegExp(filters, 'i');
-    return await this.rolModel.find({ name: { $regex: regexPattern } }).populate('Users').populate('access').exec()
+    return await this.rolModel.find({ name: { $regex: regexPattern }, delete:false }).populate('Users').populate('access').exec()
 
   }
 
   async findOne(id: string) {
     return await this.rolModel.findOne({ id, delete: false })
-    .populate({
-      path: 'access',
-      populate: [
-        { path: 'componente', model:'Components' },
-        { path: 'permisos', model:'Permission' }
-      ]
-    })
+    .populate('access')
     .exec();
   }
 
   async update(id: string, updateRoleDto: UpdateRoleDto) {
+    try{
+    const rol = await this.rolModel.findOne({name:updateRoleDto.name, id: { $ne: id }})
+    if(!updateRoleDto.name){
+      throw new HttpException({message:{name:'El Campo nombre del rol es requerido'}}, HttpStatus.BAD_REQUEST);
+    }
+    if(rol){
+      throw new HttpException({message:{name:'El nombre de rol ya se ecuentra registrado'}}, HttpStatus.BAD_REQUEST);
+    }
     return await this.rolModel.findOneAndUpdate({ id }, updateRoleDto);
+  }catch(error){
+    console.log(error)
   }
-  remove(id: number) {
-    return `This action removes a #${id} role`;
+  }
+  async remove(id: string) {
+    try{
+      return await this.rolModel.findOneAndUpdate ({id},{delete:true});
+    }catch(error){
+      console.log(error)
+    }
+    
   }
   async findRoleByName(roleName: string) {
     return this.rolModel.findOne({ name: roleName }).populate({

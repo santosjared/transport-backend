@@ -45,9 +45,13 @@ export class UsersController {
   }
 
   @Put('asignedrol/:id')
-  asignedRol(@Param('id') id: string, @Body() idrol: {idrol:string}) {
-    // console.log(idrol)
-    return this.usersService.asignedRol(id, idrol);
+  async asignedRol(@Param('id') id: string, @Body() idrol: {idrol:string}) {
+    return await this.usersService.asignedRol(id, idrol);
+  }
+  
+  @Put('desasignedrol/:id')
+  async desasignedrol(@Param('id') id: string , @Body() idrol: {idrol:string}){
+    return this.usersService.desasignedrol(id, idrol)
   }
 
   @Delete(':id')

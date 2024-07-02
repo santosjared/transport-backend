@@ -39,6 +39,10 @@ export class BusController {
     return await this.busService.findOne(id);
   }
 
+  @Get('busroad/:id')
+  async busroad(@Param('id') id:string){
+    return this.busService.busroad(id)
+  }
   // @UseGuards(JwtAuthGuard)
   @Put(':id')
   @UseInterceptors(FileFieldsInterceptor([{name:'photo'},{name:'ruat'}]))

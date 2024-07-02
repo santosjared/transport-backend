@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { ComponentSDocument, Components } from './schema/componentes';
 import { Model } from 'mongoose';
 import { IsEmptyDB } from 'src/utils/isEmptyDB';
-import { ComponentsSeeder, permissionSeeder } from 'src/seeders/rol.seeder';
+import { ComponentsSeeder } from 'src/seeders/rol.seeder';
 import { Permission, PermissionDocument } from 'src/permission/schema/permission.schema';
 
 @Injectable()
@@ -21,12 +21,7 @@ export class ComponentesService {
     if(await IsEmptyDB(this.componentsModel))return ComponentsSeeder(this.componentsModel)
   }
 async asignedPermission (){
-  if(await IsEmptyDB(this.PermissionModel))return permissionSeeder(this.PermissionModel)
-  const permisosDB = await this.PermissionModel.find()
- const  permisos = permisosDB.map((permiso)=>{
-  return permiso._id
-  })
-  console.log(permisos)
+
 }
   async findAll() {
     return await this.componentsModel.find();

@@ -12,38 +12,37 @@ import { Linea, LineaDocument } from 'src/linea/schema/linea.schema';
 @Injectable()
 export class SocketService {
   constructor(private locationsService: LocationsService,
-    private userService:UsersService,
-    @InjectModel(Bus.name) private readonly busModel:Model<BusDocmunet>,
-    @InjectModel(Linea.name) private readonly lineaModel:Model<LineaDocument>
+    private userService: UsersService,
+    @InjectModel(Bus.name) private readonly busModel: Model<BusDocmunet>,
+    @InjectModel(Linea.name) private readonly lineaModel: Model<LineaDocument>
   ) { }
   async logical(message: any, time) {
     try {
       const { latitude, longitude, token } = message
       const decode: any = this.verifayToken(token)
-      console.log(decode)
       if (decode) {
-        const findLocation = await this.locationsService.findOne(decode.id)
+
+        const findLocation = await this.locationsService.findOne(decode._id)
         if (findLocation) {
-          if(findLocation.cords.length === 0){
+          if (findLocation.cords.length === 0) {
             const location = {
               cords: [latitude, longitude],
-              oldcords:[latitude,longitude],
               speed: 0,
               distance: 0,
-              userId: decode.id
+              userId: decode._id
             };
-            await this.locationsService.update(findLocation.id, location);
+            await this.locationsService.update(findLocation._id.toString(), location);
           }
           if (findLocation.signal) {
             const location = {
               cords: [latitude, longitude],
-              oldcords:findLocation.cords,
+              oldcords: findLocation.cords,
               speed: 0,
               distance: 0,
-              userId: decode.id
+              userId: decode._id
             };
-            await this.locationsService.update(findLocation.id, location);
-            await this.locationsService.updateStatus(findLocation.userId,false)
+            await this.locationsService.update(findLocation._id.toString(), location);
+            await this.locationsService.updateStatus(findLocation.userId, false)
           } else {
             const cordsA = this.convertCords(findLocation.cords)
             const cordsB = { latitude, longitude }
@@ -52,12 +51,12 @@ export class SocketService {
 
             const location = {
               cords: [latitude, longitude],
-              oldcords:findLocation.cords,
+              oldcords: findLocation.cords,
               speed: speed,
               distance: distance,
-              userId: decode.id
+              userId: decode._id
             };
-            await this.locationsService.update(findLocation.id, location);
+            await this.locationsService.update(findLocation._id.toString(), location);
           }
         }
       }
@@ -104,10 +103,9 @@ export class SocketService {
     return this.round(distance / time, 0)
   }
   private time(distance: number, speed: number): number {
-    if(speed===0)
-      {
-        return distance/14
-      }
+    if (speed === 0) {
+      return distance / 14
+    }
     return distance / speed
   }
   private round(decimal: number, length: number): number {
@@ -118,28 +116,34 @@ export class SocketService {
     const [latitude, longitude] = coordenadas;
     return { latitude, longitude };
   }
-  async updateStatusUser(id:string,status:string){
-  await this.userService.updateStatus(id,status)
+  async updateStatusUser(id: string, status: string) {
+    await this.userService.updateStatus(id, status)
   }
-  async create(decode:any){
-    const bus = await this.busModel.find({userId:decode._id})
-    if(bus){
-      const findLocation = await this.locationsService.findOne(decode.id)
-      if(findLocation){
-        return findLocation
+  async create(decode: any) {
+    const bus = await this.busModel.findOne({ userId: decode._id })
+    if (bus) {
+      const findLocation = await this.locationsService.findOne(decode._id)
+      if (findLocation) {
+        return 
       }
       const data = {
-        cords:[],
-        speed:0,
-        distance:0,
-        userId:decode.id
+        cords: [],
+        speed: 0,
+        distance: 0,
+        userId: decode._id
       }
       const location = await this.locationsService.create(data)
-      await this.busModel.findOneAndUpdate({userId:decode._id}, {locationId:location._id}, {new:true})
-      return location
+      await this.busModel.findOneAndUpdate({ userId: decode._id }, { locationId: location._id }, { new: true })
+      return 
     }
   }
-  async nearBus(location:{ latitude:number, longitude:number }){
+  async removeLoaction (id:any){
+    await this.busModel.findOneAndUpdate({ userId: id }, { locationId: null }, { new: true })
+    this.locationsService.remove(id)
+  }
+  async nearBus(data: any) {
+
+    const { location, busesOld } = data
 
     const buses = await this.busModel.find({
       locationId: { $ne: null },
@@ -147,143 +151,166 @@ export class SocketService {
     })
       .populate({
         path: 'userId',
-        model:'Users',
+        model: 'Users',
         match: { status: { $in: ['signal', 'connected'] } }
       }).populate('locationId').populate('road');
-
-    const filteredBuses = buses.filter(bus => bus.userId !== null && bus.locationId.cords.length !== 0);
+    const filteredBuses = buses.filter(bus => bus.userId !== null && bus.locationId?.cords.length !== 0);
     if (filteredBuses.length === 0) {
       return { message: 'NINGUN BUS EN OPERACION' };
     }
-    
+
     const lineas = await this.lineaModel.find({ delete: false }).populate('buses');
-    
     const lineaMap: { [key: string]: Linea } = {};
-    
+
     lineas.forEach(linea => {
       linea.buses.forEach(buses => {
         lineaMap[buses.id] = linea;
       });
     });
-    
-    // Mapea los buses filtrados a sus respectivas líneas
+
+
     const busNear = filteredBuses.map(bus => {
       const linea = lineaMap[bus.id];
-      const distance = this.Distance(location, this.convertCords(bus.locationId.cords))
-      const oldDistance = this.Distance(location, this.convertCords(bus.locationId.oldcords))
-      // console.log(distance,oldDistance)
-      let status = 'alejandose'
-      if(distance<oldDistance){
-        status = 'acercandose'
-      }
       if (linea) {
+        const distance = this.Distance(location, this.convertCords(bus.locationId.cords))
         return {
+          id: bus.id,
           trademark: bus.trademark,
-          model: bus.model,
-          type: bus.type,
           plaque: bus.plaque,
-          cantidad: bus.cantidad,
           photo: bus.photo,
-          ruat: bus.ruat,
           userId: bus.userId,
           locationId: bus.locationId,
           road: bus.road,
-          delete: bus.delete,
-          id: bus.id,
-          linea: linea.name,
-          status:status,
-          distanceUser: this.Distance(location, this.convertCords(bus.locationId.cords))
-        };
+          distanceUser: distance,
+          linea: linea.name
+        }
+
       }
-      return null;
-    }).filter(bus => bus !== null);    
-    
-    busNear.sort((a,b)=>a.distanceUser - b.distanceUser)
-    const treeBus = busNear.slice(0,3)
-    const busAproximed = treeBus.map((bus)=>{
-      if(bus.road){
+      return null
+    }).filter(bus => bus !== null);
+
+    busNear.sort((a, b) => a.distanceUser - b.distanceUser)
+    const treeBus = busNear.slice(0, 3)
+    const busAproximed = treeBus.map((bus) => {
+      if (bus.road) {
         let distance = 0
+        let roadPivot = []
         for (const feature of bus.road.geojson.features) {
-          if(feature.geometry){
-            if(feature.geometry.type === 'LineString'){
+          if (feature.geometry) {
+            if (feature.geometry.type === 'LineString') {
               let localeUser = 0;
               let localeBus = 0;
               let distanceUser = 0;
               let distanceBus = 0;
               let index = 0
-              for (const [lng,lat] of feature.geometry.coordinates){
-                if(index==0){
-                  distanceUser = this.Distance(location, {latitude:lat,longitude:lng})
-                  distanceBus = this.Distance(this.convertCords(bus.locationId.cords), {latitude:lat,longitude:lng})
-                }else{
-                 const  distanceUserB = this.Distance(location, {latitude:lat,longitude:lng})
-                  const distanceBusB = this.Distance(this.convertCords(bus.locationId.cords), {latitude:lat,longitude:lng})
-                  if(distanceUserB<distanceUser){
+
+              for (const [lng, lat] of feature.geometry.coordinates) {
+                if (index == 0) {
+                  distanceUser = this.Distance(location, { latitude: lat, longitude: lng })
+                  distanceBus = this.Distance(this.convertCords(bus.locationId.cords), { latitude: lat, longitude: lng })
+                } else {
+                  const distanceUserB = this.Distance(location, { latitude: lat, longitude: lng })
+                  const distanceBusB = this.Distance(this.convertCords(bus.locationId.cords), { latitude: lat, longitude: lng })
+                  if (distanceUserB < distanceUser) {
                     distanceUser = distanceUserB
                     localeUser = index
                   }
-                  if(distanceBusB<distanceBus){
+                  if (distanceBusB < distanceBus) {
                     distanceBus = distanceBusB
                     localeBus = index
                   }
                 }
                 index++;
               }
-              distance +=distanceBus
-              for(let index = localeBus; index<localeUser;index++){
-                distance += this.Distance(this.convertCords(feature.geometry.coordinates[index]),this.convertCords(feature.geometry.coordinates[index+1]))
+              distance += distanceBus
+              roadPivot = feature.geometry.coordinates[localeUser]
+              for (let index = localeBus; index < localeUser; index++) {
+                distance += this.Distance(this.convertCords(feature.geometry.coordinates[index]), this.convertCords(feature.geometry.coordinates[index + 1]))
               }
             }
           }
         }
-        const time = this.round(this.time(distance,bus.locationId.speed)*60,0)
-        let timeF = time + ' minutos'
-        if(time>60){
-         const hrs = this.round(time/60,0)
-         timeF = hrs + ' horas'
-         if(hrs>24){
-          const day = this.round(hrs/24,0)
-          timeF = day + ' días'
-         }
-        }
+        const time = this.timeAproxime(distance, bus.locationId.speed)
         return {
-        trademark:bus.trademark,
-        model:bus.model,
-        type:bus.type,
-        plaque:bus.plaque,
-        cantidad:bus.cantidad,
-        photo:bus.photo,
-        ruat:bus.ruat,
-        userId:bus.userId,
-        locationId:bus.locationId,
-        road:bus.road,
-        delete:bus.delete,
-        id:bus.id,
-        linea:bus.linea,
-        status:bus.status,
-        time: timeF
+          id: bus.id,
+          trademark: bus.trademark,
+          plaque: bus.plaque,
+          photo: bus.photo,
+          userId: bus.userId,
+          locationId: bus.locationId,
+          road: bus.road,
+          distanceUser: distance,
+          linea: bus.linea,
+          roadPivot: roadPivot,
+          distance: distance,
+          time: time,
+          status: 'cercano'
         }
-      }else{
+      } else {
         const distance = this.Distance(location, this.convertCords(bus.locationId.cords))
+        const time = this.timeAproxime(distance, bus.locationId.speed)
         return {
-        trademark:bus.trademark,
-        model:bus.model,
-        type:bus.type,
-        plaque:bus.plaque,
-        cantidad:bus.cantidad,
-        photo:bus.photo,
-        ruat:bus.ruat,
-        status:bus.status,
-        userId:bus.userId,
-        locationId:bus.locationId,
-        road:bus.road,
-        delete:bus.delete,
-        linea:bus.linea,
-        id:bus.id,
-        time: this.time(distance, bus.locationId.speed)
+          id: bus.id,
+          trademark: bus.trademark,
+          plaque: bus.plaque,
+          photo: bus.photo,
+          userId: bus.userId,
+          locationId: bus.locationId,
+          road: bus.road,
+          distanceUser: bus.distanceUser,
+          linea: bus.linea,
+          roadPivot: [],
+          distance: distance,
+          time: time,
+          status: 'cercano'
         }
       }
     })
-    return {buses:busAproximed}
+    if (busesOld.length !== 0) {
+
+      const handleStatus = busAproximed.map((bus) => {
+        let status = 'cerca de ti'
+        busesOld.map((oldBus) => {
+          if (oldBus.id === bus.id) {
+            if(bus.distanceUser<oldBus.distanceUser){
+              status = 'Acercandose'
+            } else {
+              status = 'Alejandose'
+            }
+          }
+        })
+        return {
+          id: bus.id,
+          trademark: bus.trademark,
+          plaque: bus.plaque,
+          photo: bus.photo,
+          userId: bus.userId,
+          locationId: bus.locationId,
+          road: bus.road,
+          distanceUser: bus.distanceUser,
+          linea: bus.linea,
+          roadPivot: bus.roadPivot,
+          distance: bus.distance,
+          time: bus.time,
+          status: status
+        }
+      })
+      return { buses: handleStatus }
+    }
+    return { buses: busAproximed }
+  }
+  private timeAproxime(distance: number, speed: number): string {
+    const time = this.round(this.time(distance, speed) * 60, 0)
+    let timeF = time + ' minutos'
+    if (time > 60) {
+      const hrs = this.round(time / 60, 0)
+      timeF = hrs + ' horas'
+      if (hrs > 24) {
+        const day = this.round(hrs / 24, 0)
+        timeF = day + ' días'
+      }
+
+    }
+    return timeF
   }
 }

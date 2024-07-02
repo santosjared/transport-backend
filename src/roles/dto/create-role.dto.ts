@@ -5,8 +5,4 @@ export class CreateRoleDto {
     name:string
     @ApiProperty()
     access:any[]
-
-    @ApiProperty()
-    permission:string[]
-
 }

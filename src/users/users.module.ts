@@ -11,7 +11,6 @@ import { Auth, authSchema } from 'src/auth/schema/auth.schema';
 import { Permission, PermissionSchema } from 'src/permission/schema/permission.schema';
 import { Components, ComponentsSchma } from 'src/componentes/schema/componentes';
 import { Rol, rolSchema } from 'src/roles/schema/roles.schema';
-import { AccesRules, AccesRulesSchema } from 'src/roles/schema/accessrules';
 
 @Module({
   imports:[MongooseModule.forFeature([{
@@ -37,10 +36,6 @@ import { AccesRules, AccesRulesSchema } from 'src/roles/schema/accessrules';
   MongooseModule.forFeature([{
     name:Rol.name,
     schema:rolSchema
-  }]),
-  MongooseModule.forFeature([{
-    name:AccesRules.name,
-    schema:AccesRulesSchema
   }]),
   MulterModule.register({
     dest:'./uploads'

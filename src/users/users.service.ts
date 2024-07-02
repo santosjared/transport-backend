@@ -9,13 +9,12 @@ import { UsersMessageError } from 'src/utils/messages/useres-message.error';
 import { FiltersDto } from 'src/utils/filters.dto';
 import { Bus, BusDocmunet } from 'src/bus/schema/bus.schema';
 import { last } from 'rxjs';
-import { ComponentsSeeder, RolSeeder, permissionSeeder } from 'src/seeders/rol.seeder';
+import { ComponentsSeeder} from 'src/seeders/rol.seeder';
 import { Rol, RolDocument } from 'src/roles/schema/roles.schema';
 import { ComponentSDocument, Components } from 'src/componentes/schema/componentes';
 import { Permission, PermissionDocument } from 'src/permission/schema/permission.schema';
 import { IsEmptyDB } from 'src/utils/isEmptyDB';
 import { Auth, AuthDocument } from 'src/auth/schema/auth.schema';
-import { AccesRules, AccesRulesDocument } from 'src/roles/schema/accessrules';
 
 @Injectable()
 export class UsersService {
@@ -26,7 +25,6 @@ export class UsersService {
   @InjectModel(Permission.name) private readonly permissionModel:Model<PermissionDocument>,
   @InjectModel(Bus.name) private readonly busModel:Model<BusDocmunet>,
   @InjectModel(Auth.name) private readonly authModel:Model<AuthDocument>,
-  @InjectModel(AccesRules.name) private readonly accesRulesModel:Model<AccesRulesDocument>
   ) { }
   async create(createUserDto: CreateUserDto, file?: Express.Multer.File) {
     const { email, password, ci } = createUserDto
@@ -140,7 +138,8 @@ export class UsersService {
     
   }
   async updateStatus(id: string, status: string) {
-    return await this.userModel.findOneAndUpdate({ id }, { status, lastConnect: new Date(Date.now()) });
+    console.log(id)
+    return await this.userModel.findOneAndUpdate({ _id:id }, { status, lastConnect: new Date(Date.now()) });
   }
   async remove(id: string) {
     const remove = await this.userModel.findOneAndUpdate({ id }, { delete: true }, { new: true });
@@ -197,32 +196,16 @@ export class UsersService {
   }
 
   async DefaultCreateUser(){
-    if(await IsEmptyDB(this.permissionModel)) {await permissionSeeder(this.permissionModel)}
     if(await IsEmptyDB(this.ComponentsModel)) {await ComponentsSeeder(this.ComponentsModel)}
     const defaultUser = await this.userModel.findOne({email:'adminbus@gmail.com'})
     if(!defaultUser){
-      const permission = await this.permissionModel.find()
-    const permisionID = permission.map((permiso)=>{
-      return permiso._id.toString();
-    })
     const componentes = await this.ComponentsModel.find()
     const componetsId = componentes.map((componente)=>{
       return componente._id.toString();
     })
-
-    const acces= componetsId.map((value)=>{
-      return {
-        componente:value, permisos:permisionID
-      }
-    })
-
-    const accessPromises = componentes.map(async (value) => {
-
-    });
-  
     const rolData = {
       name:'Administrador',
-      access:acces
+      access:componetsId
     }
     const rol = await this.rolModel.create(rolData)
     const userData = {
@@ -248,6 +231,11 @@ export class UsersService {
    async asignedRol(id:string,idrol:{idrol:string}){
      const role = await this.rolModel.findByIdAndUpdate(idrol.idrol,{ $addToSet: { Users: { $each:[id.toString()] } } })
     return await this.userModel.findByIdAndUpdate(id,{rol:idrol.idrol})
+   }
+   async desasignedrol(id:string, idrol:{idrol:string}){
+    const user = await this.userModel.findOneAndUpdate({id},{rol:null})
+    const update = await this.rolModel.findOneAndUpdate({ id:idrol.idrol }, { $pull: { Users: { $in:[user._id] } } }, { new: true })
+    return update
    }
  }
 

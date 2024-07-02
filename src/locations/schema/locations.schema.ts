@@ -7,12 +7,8 @@ export type LocationsDocument = HydratedDocument<Locations>
 
 @Schema()
 export class Locations{
-    @Prop({type:String, default:uuid()})
-    id:string
     @Prop()
     cords:number[]
-    @Prop()
-    oldcords:number[]
     @Prop()
     speed:number
     @Prop()

@@ -15,7 +15,10 @@ export class AuthController {
   }
   @Get()
   async findAll(@Req() req){
-    const [bearer , token] = req.headers.authorization.split(' ')
-    return await this.authService.verifayToken(token?token:req.headers.authorization)
+    if(req.headers.authorization){
+      const [bearer , token] = req.headers.authorization.split(' ')
+     return await this.authService.verifayToken(token?token:req.headers.authorization)
+    }
+    return await this.authService.verifayToken(req)
   }
 }

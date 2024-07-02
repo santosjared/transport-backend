@@ -11,7 +11,8 @@ export class LocationsService {
         return await this.locationService.create(createLocationDto);
     }
     async update(id:string,createLocationDto:CreateLocationDto){
-        return await this.locationService.findOneAndUpdate({id},createLocationDto)
+        const data = await this.locationService.findOneAndUpdate({_id:id},createLocationDto)
+        return data
     }
     async findOne(id:string){
         return await this.locationService.findOne({userId:id})

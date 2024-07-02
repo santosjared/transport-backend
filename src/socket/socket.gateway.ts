@@ -74,26 +74,26 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       } else {
         const decode:any = this.socketService.verifayToken((user as any).token)
         if(decode){
-          await this.socketService.updateStatusUser(decode.id,'connected')
+          await this.socketService.updateStatusUser(decode._id,'connected')
           await this.socketService.create(decode)
           client.emit('response', user)
-          client.handshake.query.id = decode.id
+          client.handshake.query.id = decode._id
           const filter = {filter:'',skip:0,limit:10}
-        const users = await this.statusService.findAll(filter)
-        this.server.emit('updateStatus', users)
+          const users = await this.statusService.findAll(filter)
+          this.server.emit('updateStatus', users)
         }
         
       }
-    } catch {
+    } catch (err){
+      console.log(err)
       client.emit('response', { message: 'UNAUTHORIZED', statusCode: HttpStatus.UNAUTHORIZED })
       client.disconnect()
     }
   }
   @SubscribeMessage('logout')
   async logout(@ConnectedSocket() client:Socket){
-    console.log('logaut')
     if(client.handshake.query.id){
-      await this.locationService.remove(client.handshake.query.id as string)
+      await this.socketService.removeLoaction(client.handshake.query.id as string)
       await this.socketService.updateStatusUser(client.handshake.query.id as string,'disconnected')
       client.handshake.query=null
       const filter = {filter:'',skip:0,limit:10}
@@ -114,8 +114,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('nearbus')  
-  async nearbus(@MessageBody() location:{ latitude:number, longitude:number }, @ConnectedSocket() client: Socket){
-    const nearBus = await this.socketService.nearBus(location)
+  async nearbus(@MessageBody() data:any, @ConnectedSocket() client: Socket){
+    const nearBus = await this.socketService.nearBus(data)
     client.emit('buses', nearBus)
   }
 }
