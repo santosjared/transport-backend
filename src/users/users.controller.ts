@@ -2,12 +2,13 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInt
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FiltersDto } from 'src/utils/filters.dto';
 
 @Controller('users')
 @ApiTags('users')
+@ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { IsDate, IsEmail, IsString, isEmail, isString } from "class-validator";
 import mongoose, { HydratedDocument } from "mongoose";
+import { Auth } from "src/auth/schema/auth.schema";
 import { Bus } from "src/bus/schema/bus.schema";
 import { LicenceDriver } from "src/licence-driver/schema/licence-driver.schema";
 import { Rol } from "src/roles/schema/roles.schema";
@@ -60,6 +61,9 @@ export class Users {
     rol:Rol
     @Prop({type:mongoose.Schema.Types.ObjectId, ref:'LicenceDriver', default:null})
     licenceId:LicenceDriver
+
+    @Prop({type:mongoose.Schema.Types.ObjectId,ref:'Auth'})
+    auth:Auth
     
     @Prop({type:Boolean, default:false})
     delete:boolean

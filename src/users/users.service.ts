@@ -15,6 +15,7 @@ import { ComponentSDocument, Components } from 'src/componentes/schema/component
 import { Permission, PermissionDocument } from 'src/permission/schema/permission.schema';
 import { IsEmptyDB } from 'src/utils/isEmptyDB';
 import { Auth, AuthDocument } from 'src/auth/schema/auth.schema';
+import { hashCrypto } from 'src/utils/crypto';
 
 @Injectable()
 export class UsersService {
@@ -27,41 +28,33 @@ export class UsersService {
   @InjectModel(Auth.name) private readonly authModel:Model<AuthDocument>,
   ) { }
   async create(createUserDto: CreateUserDto, file?: Express.Multer.File) {
-    const { email, password, ci } = createUserDto
+    try{
+      const { email, password, ci } = createUserDto
     const dbEmail = await this.userModel.findOne({ email })
+    console.log(dbEmail)
     if (dbEmail) {
-      if (dbEmail.delete) {
-        createUserDto.delete=false
-        this.authService.update(email,{email,delete:false})
-        return this.update(dbEmail.id, createUserDto,file)
-      }
-      UsersMessageError.email = 'el Correo Electrónico ya se encuentra registrado'
+      UsersMessageError.email = 'El correo electrónico ya se encuentra registrado'
       throw new HttpException(UsersMessageError, HttpStatus.BAD_REQUEST);
-    }
-    const dbCi = await this.userModel.findOne({ ci })
-    if (dbCi) {
-      if (dbCi.delete) {
-        createUserDto.delete=false
-        this.authService.update(email,{email,delete:false})
-        return this.update(dbEmail.id, createUserDto, file)
       }
-      UsersMessageError.ci = 'El Ci ya se encuentra registrado'
+      const dbCi = await this.userModel.findOne({ ci })
+      if(dbCi){
+        UsersMessageError.email = 'La cedula de identidad ya se encuentra registrado'
       throw new HttpException(UsersMessageError, HttpStatus.BAD_REQUEST);
-    }
+      }
     if (file) {
       const fs = require('fs');
       fs.renameSync(file.path, `./uploads/${file.originalname}`)
       createUserDto.profile = `/uploads/${file.originalname}`;
-      const auth = await this.authService.findOne(email)
-      if (auth) {
-        return await this.userModel.create(createUserDto);
-      }
-      this.authService.create({ email, password })
+      const aut = await this.authService.create({ email, password })
+      createUserDto.auth = aut._id.toString()
       return await this.userModel.create(createUserDto);
     }
-    this.authService.create({ email, password })
+    const auth = await this.authService.create({ email, password })
+    createUserDto.auth = auth._id.toString()
     return await this.userModel.create(createUserDto);
-
+  }catch{
+    throw new HttpException(UsersMessageError, HttpStatus.BAD_REQUEST);
+  }
   }
   async findAll(filters: any) {
     if(filters){
@@ -69,7 +62,14 @@ export class UsersService {
       const searchFilters = {delete:false}
       if (filter) {
         if (filter.name) {
-          searchFilters['name'] = { $regex: new RegExp(filter.name, 'i') };
+          const names = filter.name.split(' ');
+          const nameFilters = names.map(namePart => ({
+            $or: [
+              { 'name': { $regex: new RegExp(namePart, 'i') } },
+              { 'lastName': { $regex: new RegExp(namePart, 'i') } }
+            ]
+          }));
+          searchFilters['$and'] = nameFilters;
         }
         if (filter.ci) {
           searchFilters['ci'] = { $regex: new RegExp(filter.ci, 'i') };
@@ -78,13 +78,17 @@ export class UsersService {
           searchFilters['address'] = { $regex: new RegExp(filter.address, 'i') };
         }
         if(filter.phone) {
-          searchFilters[''] = { $regex: new RegExp(filter.address, 'i') };
+          searchFilters['phone'] = { $regex: new RegExp(filter.address, 'i') };
         }
         if(filter.gender) {
           searchFilters['gender'] = { $regex: new RegExp(filter.gender, 'i') };
         }
         if (filter.contry) {
           searchFilters['contry'] = { $regex: new RegExp(filter.contry, 'i') };
+        }
+        if (filter.rol){
+          const rol = await this.rolModel.findOne({name:filter.rol})
+          searchFilters['rol'] = rol._id
         }
       }
       if (skip !== undefined && limit !== undefined) {
@@ -125,20 +129,46 @@ export class UsersService {
     return { result, total }
   }
   async update(id: string, updateUserDto: UpdateUserDto, file: Express.Multer.File) {
-    const { email } = updateUserDto
+    try{
+      const user = await this.userModel.findOne({email:updateUserDto.email, id: { $ne: id }})
+      if(user){
+        UsersMessageError.email = 'El correo electrónico ya se encuentra registrado'
+      throw new HttpException(UsersMessageError, HttpStatus.BAD_REQUEST);
+      }
+      const ci = await this.userModel.findOne({ci:updateUserDto.ci, id: { $ne: id }})
+      if(ci){
+        UsersMessageError.ci = 'La cédula de identidad ya se encuentra registrado'
+      throw new HttpException(UsersMessageError, HttpStatus.BAD_REQUEST);
+      }
     if (file) {
+      
       const fs = require('fs');
       fs.renameSync(file.path, `./uploads/${file.originalname}`)
       updateUserDto.profile = `/uploads/${file.originalname}`;
-      this.authService.update(email,{ email})
-      return await this.userModel.findOneAndUpdate({id},updateUserDto);
+      const data = await this.userModel.findOneAndUpdate({id},updateUserDto, {new:true}).populate('auth');
+      if(!updateUserDto.password){
+        const aut = await this.authModel.findOneAndUpdate({id:data.auth.id},{email:data.email})
+      }else{
+        const passHas = await hashCrypto(updateUserDto.password)
+        const auth = await this.authModel.findOneAndUpdate({id:data.auth.id},{email:data.email, password:passHas})
+      }
+      return data
     }
-    this.authService.update(email,{ email})
-    return await this.userModel.findOneAndUpdate({id},updateUserDto);
+    const userUpdate = await this.userModel.findOneAndUpdate({id},updateUserDto,{new:true}).populate('auth');
+    if(!updateUserDto.password){
+      const auth = await this.authModel.findOneAndUpdate({id:userUpdate.auth.id},{email:userUpdate.email})
+    }else{
+      const passHas = await hashCrypto(updateUserDto.password)
+      const auth = await this.authModel.findOneAndUpdate({id:userUpdate.auth.id},{email:userUpdate.email, password:passHas}, {new:true})
+    }
+    return userUpdate
+    
+    }catch{
+      throw new HttpException(UsersMessageError, HttpStatus.BAD_REQUEST);
+    }
     
   }
   async updateStatus(id: string, status: string) {
-    console.log(id)
     return await this.userModel.findOneAndUpdate({ _id:id }, { status, lastConnect: new Date(Date.now()) });
   }
   async remove(id: string) {

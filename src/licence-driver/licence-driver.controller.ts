@@ -3,10 +3,11 @@ import { LicenceDriverService } from './licence-driver.service';
 import { CreateLicenceDriverDto } from './dto/create-licence-driver.dto';
 import { UpdateLicenceDriverDto } from './dto/update-licene-driver.dto';
 import { FileFieldsInterceptor} from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('licencia')
 @ApiTags('licencia')
+@ApiBearerAuth()
 export class LicenceDriverController {
   constructor(private readonly licenceDriverService: LicenceDriverService) {}
 

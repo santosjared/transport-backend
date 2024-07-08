@@ -1,18 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put, UsePipes, ValidationPipe, ValidationError } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put, UsePipes, ValidationPipe, ValidationError, UseGuards } from '@nestjs/common';
 import { RoadService } from './road.service';
 import { CreateRoadDto } from './dto/create-road.dto';
 import { UpdateRoadDto } from './dto/update-road.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FiltersDto } from 'src/utils/filters.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
 
 @Controller('road')
+@ApiBearerAuth()
 @ApiTags('road')
 export class RoadController {
   constructor(private readonly roadService: RoadService) {}
-
-  @Post()
   
   @Post()
+  // @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({
     transform: true,
     whitelist: true,
@@ -37,6 +38,7 @@ export class RoadController {
       };
     },
   }))
+
   async create(@Body() createRoadDto: CreateRoadDto) {
     return this.roadService.create(createRoadDto);
   }

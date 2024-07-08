@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Put, Query, UsePipes
 import { LineaService } from './linea.service';
 import { CreateLineaDto } from './dto/create-linea.dto';
 import { UpdateLineaDto } from './dto/update-linea.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FiltersDto } from 'src/utils/filters.dto';
 import { AsignedRoadDto } from './dto/asigned-road';
 import { AsignedHorarioDto } from './dto/asigned-horario';
@@ -13,6 +13,7 @@ import { Console } from 'console';
 
 @Controller('linea')
 @ApiTags('linea')
+@ApiBearerAuth()
 export class LineaController {
   constructor(private readonly lineaService: LineaService) {}
 

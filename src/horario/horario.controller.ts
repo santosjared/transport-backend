@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Put, Query, Validati
 import { HorarioService } from './horario.service';
 import { CreateHorarioDto } from './dto/create-horario.dto';
 import { UpdateHorarioDto } from './dto/update-horario.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FiltersDto } from 'src/utils/filters.dto';
 import { RolesGuard } from 'src/roles/guards/rols.guard';
 import { Permissions } from 'src/roles/decorator/permission.decorator';
@@ -10,6 +10,7 @@ import { Permissions } from 'src/roles/decorator/permission.decorator';
 @Controller('horario')
 @ApiTags('horario')
 @UseGuards(RolesGuard)
+@ApiBearerAuth()
 export class HorarioController {
   constructor(private readonly horarioService: HorarioService) {}
 

@@ -19,6 +19,8 @@ import { RolesModule } from './roles/roles.module';
 import { ReportlineaModule } from './reportlinea/reportlinea.module';
 import { ComponentesModule } from './componentes/componentes.module';
 import { PermissionModule } from './permission/permission.module';
+import { GenderModule } from './gender/gender.module';
+import { ContryModule } from './contry/contry.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -44,6 +46,8 @@ import { PermissionModule } from './permission/permission.module';
   ReportlineaModule,
   ComponentesModule,
   PermissionModule,
+  GenderModule,
+  ContryModule,
 ]
 })
 export class AppModule {}

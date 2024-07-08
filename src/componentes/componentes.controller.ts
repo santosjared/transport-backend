@@ -2,8 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ComponentesService } from './componentes.service';
 import { CreateComponenteDto } from './dto/create-componente.dto';
 import { UpdateComponenteDto } from './dto/update-componente.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('componentes')
 @ApiTags('componentes')
 export class ComponentesController {

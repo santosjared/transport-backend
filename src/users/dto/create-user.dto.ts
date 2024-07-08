@@ -43,7 +43,7 @@ export class CreateUserDto {
     @Length(6, 20)
     password: string;
 
-    rol?:string
+    auth?:string
     delete?:boolean
 
     constructor(partial: Partial<CreateUserDto>) {

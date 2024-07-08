@@ -10,7 +10,7 @@ import { LineaService } from 'src/linea/linea.service';
 import { StatusService } from 'src/status/status.service';
 import { FiltersDto } from 'src/utils/filters.dto';
 
-const time = 20;//seconds
+const time = 7;//seconds
 @WebSocketGateway({
   cors: {
     origin: '*'
@@ -54,7 +54,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
   @SubscribeMessage('sendLocation')
   async create(@MessageBody() message: any, @ConnectedSocket() client: Socket) {
-    console.log(message)
+    // console.log(message)
     try{
       if(client.handshake.query.id){
         this.socketService.logical(message,time)
