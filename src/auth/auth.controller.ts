@@ -11,7 +11,6 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() createAuthDto:CreateAuthDto){
-    console.log(createAuthDto)
     return await this.authService.validateUser(createAuthDto)
   }
   @Get()

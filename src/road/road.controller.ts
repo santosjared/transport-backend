@@ -12,6 +12,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
 export class RoadController {
   constructor(private readonly roadService: RoadService) {}
   
+  @UseGuards(JwtAuthGuard)
   @Post()
   // @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({
@@ -43,16 +44,19 @@ export class RoadController {
     return this.roadService.create(createRoadDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(@Query() filters:FiltersDto) {
     return this.roadService.findAll(filters);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.roadService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -82,6 +86,7 @@ export class RoadController {
     return this.roadService.update(id, updateRoadDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return this.roadService.remove(id);

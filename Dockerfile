@@ -1,23 +1,48 @@
-# Usa una imagen base oficial de Node.js
-FROM node:18-alpine
+###################
+# BUILD FOR LOCAL DEVELOPMENT
+###################
 
-# Establece el directorio de trabajo
+FROM node:18-alpine As development
+
 WORKDIR /usr/src/app
 
-# Copia el archivo package.json y package-lock.json
-COPY package*.json ./
+COPY --chown=node:node package*.json ./
 
-# Instala las dependencias
-RUN npm install
+RUN npm ci
 
-# Copia el resto de los archivos de la aplicación
-COPY . .
+COPY --chown=node:node . .
 
-# Compila la aplicación
+USER node
+
+###################
+# BUILD FOR PRODUCTION
+###################
+
+FROM node:18-alpine As build
+
+WORKDIR /usr/src/app
+
+COPY --chown=node:node package*.json ./
+
+COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modules
+
+COPY --chown=node:node . .
+
 RUN npm run build
 
-# Expone el puerto en el que se ejecutará la aplicación
-EXPOSE 3000
+ENV NODE_ENV production
 
-# Comando para ejecutar la aplicación
-CMD ["npm", "run", "start:prod"]
+RUN npm ci --only=production && npm cache clean --force
+
+USER node
+
+###################
+# PRODUCTION
+###################
+
+FROM node:18-alpine As production
+
+COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node --from=build /usr/src/app/dist ./dist
+
+CMD [ "node", "dist/main.js" ]

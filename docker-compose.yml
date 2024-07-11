@@ -6,9 +6,12 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '3001:3000'
+      - '3001:3001'
     environment:
-      MONGO_URI: mongodb://mongo:27017/mi_basededatos
+      PORT: 3001
+      MONGO_URI: ${MONGO_URI}
+      TOKEN_SESION: ${TOKEN_SESION}
+      TOKEN_EXPIRE: ${TOKEN_EXPIRE}
     depends_on:
       - mongo
 
