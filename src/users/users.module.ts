@@ -11,6 +11,8 @@ import { Auth, authSchema } from 'src/auth/schema/auth.schema';
 import { Permission, PermissionSchema } from 'src/permission/schema/permission.schema';
 import { Components, ComponentsSchma } from 'src/componentes/schema/componentes';
 import { Rol, rolSchema } from 'src/roles/schema/roles.schema';
+import { GenderModule } from 'src/gender/gender.module';
+import { ContryModule } from 'src/contry/contry.module';
 
 @Module({
   imports:[MongooseModule.forFeature([{
@@ -37,11 +39,14 @@ import { Rol, rolSchema } from 'src/roles/schema/roles.schema';
     name:Rol.name,
     schema:rolSchema
   }]),
+  GenderModule,
+  ContryModule,
   MulterModule.register({
     dest:'./uploads'
   })
 ],
   controllers: [UsersController],
   providers: [UsersService,AuthService,JwtService],
+  exports:[UsersService]
 })
 export class UsersModule {}

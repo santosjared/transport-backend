@@ -8,16 +8,42 @@ import { BusDocmunet } from './schema/bus.schema';
 import { AsigneDriverDto } from './dto/asigne-driver.dto';
 import * as fs from 'fs';
 import { Users, UsersDocument } from 'src/users/schema/users.schema';
+import { BusmarkerService } from 'src/busmarker/busmarker.service';
+import { BustypeService } from 'src/bustype/bustype.service';
+import { BusstatusService } from 'src/busstatus/busstatus.service';
 
 @Injectable()
 export class BusService {
   constructor(@InjectModel(Bus.name) private readonly busModel: Model<BusDocmunet>,
-    @InjectModel(Users.name) private readonly userModel: Model<UsersDocument>
+  private BusMarkerService:BusmarkerService,
+  private BusTypeService:BustypeService,
+  private BusStatusService:BusstatusService
   ) { }
   async create(createBusDto: CreateBusDto, files: { photo?: Express.Multer.File[], ruat?: Express.Multer.File[] }) {
     const errorMessages = await this.isValidData(createBusDto)
     if (!errorMessages) {
       createBusDto.ruat=null
+      const marker = await this.BusMarkerService.findName(createBusDto.trademark)
+      if(marker){
+        createBusDto.trademark = marker._id.toString();
+      }else{
+        const marker = await  this.BusMarkerService.create({name:createBusDto.trademark})
+        createBusDto.trademark = marker._id.toString()
+      }
+      const type = await this.BusTypeService.findName(createBusDto.type)
+      if(type){
+        createBusDto.type = type._id.toString()
+      }else{
+        const type = await this.BusTypeService.create({name:createBusDto.type})
+        createBusDto.type = type._id.toString()
+      }
+      const status = await this.BusStatusService.findName(createBusDto.status)
+      if(status){
+        createBusDto.status = status._id.toString()
+      }else{
+        const status = await this.BusStatusService.create({name:createBusDto.status})
+        createBusDto.status = status._id.toString()
+      }
       if (files) {
         const { photo, ruat } = files;
         if (photo && ruat) {
@@ -54,7 +80,10 @@ export class BusService {
       const searchFilters = { delete: false }
       if (filter) {
         if (filter.trademark) {
-          searchFilters['trademark'] = { $regex: new RegExp(filter.trademark, 'i') };
+          const trademark = await this.BusMarkerService.findName(filter.trademark)
+          if(trademark){
+            searchFilters['trademark'] = trademark._id
+          }
         }
         if (filter.model) {
           const filterNumber = parseFloat(filter.model);
@@ -64,7 +93,10 @@ export class BusService {
           }
         }
         if (filter.type) {
-          searchFilters['type'] = { $regex: new RegExp(filter.type, 'i') };
+          const type = await this.BusTypeService.findName(filter.type)
+          if(type){
+            searchFilters['type'] = type._id
+          }
         }
         if (filter.plaque) {
           searchFilters['plaque'] = { $regex: new RegExp(filter.plaque, 'i') };
@@ -77,7 +109,10 @@ export class BusService {
           }
         }
         if (filter.status) {
-          searchFilters['status'] = filter.status
+          const status = await this.BusStatusService.findName(filter.status)
+          if(status){
+            searchFilters['status'] = status._id
+          }
         }
         if (filter.ruat) {
           if(filter.ruat === 'notdocument'){
@@ -103,7 +138,7 @@ export class BusService {
               model: 'Users',
               populate: { path: 'licenceId', model: 'LicenceDriver' }
             })
-            .populate('locationId')
+            .populate('locationId').populate('trademark').populate('type').populate('status')
 
             const result = datafilter.filter(bus => bus.userId);
             return {result, total:result.length}
@@ -117,7 +152,7 @@ export class BusService {
             model: 'Users',
             populate: { path: 'licenceId', model: 'LicenceDriver' }
           })
-          .populate('locationId')
+          .populate('locationId').populate('trademark').populate('type').populate('status')
           .skip(skip)
           .limit(limit)
           .exec();
@@ -127,13 +162,13 @@ export class BusService {
 
       const result = await this.busModel.find(searchFilters)
         .populate({ path: 'userId', model: 'Users', populate: { path: 'licenceId', model: 'LicenceDriver' } })
-        .populate('locationId').exec();
+        .populate('locationId').populate('trademark').populate('type').populate('status').exec();
       const total = await this.busModel.countDocuments(searchFilters)
       return { result, total }
     }
     const result = await this.busModel.find({ delete: false })
       .populate({ path: 'userId', model: 'Users', populate: { path: 'licenceId', model: 'LicenceDriver' } })
-      .populate('locationId').exec();
+      .populate('locationId').populate('trademark').populate('type').populate('status').exec();
     const total = await this.busModel.countDocuments({ delete: false })
     return { result, total }
   }
@@ -145,6 +180,27 @@ export class BusService {
   async update(id: string, updateBusDto: UpdateBusDto, files: { photo?: Express.Multer.File[], ruat?: Express.Multer.File[] }) {
     const errorMessages = await this.isValidData(updateBusDto, true)
     if (!errorMessages) {
+      const marker = await this.BusMarkerService.findName(updateBusDto.trademark)
+      if(marker){
+        updateBusDto.trademark = marker._id.toString();
+      }else{
+        const marker = await  this.BusMarkerService.create({name:updateBusDto.trademark})
+        updateBusDto.trademark = marker._id.toString()
+      }
+      const type = await this.BusTypeService.findName(updateBusDto.type)
+      if(type){
+        updateBusDto.type = type._id.toString()
+      }else{
+        const type = await this.BusTypeService.create({name:updateBusDto.type})
+        updateBusDto.type = type._id.toString()
+      }
+      const status = await this.BusStatusService.findName(updateBusDto.status)
+      if(status){
+        updateBusDto.status = status._id.toString()
+      }else{
+        const status = await this.BusStatusService.create({name:updateBusDto.status})
+        updateBusDto.status = status._id.toString()
+      }
       if (files) {
         const { photo, ruat } = files;
         if (photo && ruat) {

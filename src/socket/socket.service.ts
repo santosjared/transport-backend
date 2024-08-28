@@ -149,11 +149,12 @@ export class SocketService {
       locationId: { $ne: null },
       userId: { $ne: null }
     })
-      .populate({
+      .populate([{
         path: 'userId',
         model: 'Users',
-        match: { status: { $in: ['signal', 'connected'] } }
-      }).populate('locationId').populate('road');
+      },
+      {path:'trademark', model:'BusMarker'}
+    ]).populate('locationId').populate('road');
     const filteredBuses = buses.filter(bus => bus.userId !== null && bus.locationId?.cords.length !== 0);
     if (filteredBuses.length === 0) {
       return { message: 'NINGUN BUS EN OPERACION' };
@@ -194,79 +195,6 @@ export class SocketService {
 
     busNear.sort((a, b) => a.distanceUser - b.distanceUser)
     const treeBus = busNear.slice(0, 3)
-    // const busAproximed = treeBus.map((bus) => {
-      // if (bus.road) {
-      //   let distance = 0
-      //   let roadPivot = []
-      //   for (const feature of bus.road.geojson.features) {
-      //     if (feature.geometry) {
-      //       if (feature.geometry.type === 'LineString') {
-      //         let localeUser = 0;
-      //         let localeBus = 0;
-      //         let distanceUser = 0;
-      //         let distanceBus = 0;
-      //         let index = 0
-
-      //         for (const [lng, lat] of feature.geometry.coordinates) {
-      //           if (index == 0) {
-      //             distanceUser = this.Distance(location, { latitude: lat, longitude: lng })
-      //             distanceBus = this.Distance(this.convertCords(bus.locationId.cords), { latitude: lat, longitude: lng })
-      //           } else {
-      //             const distanceUserB = this.Distance(location, { latitude: lat, longitude: lng })
-      //             const distanceBusB = this.Distance(this.convertCords(bus.locationId.cords), { latitude: lat, longitude: lng })
-      //             if (distanceUserB < distanceUser) {
-      //               distanceUser = distanceUserB
-      //               localeUser = index
-      //             }
-      //             if (distanceBusB < distanceBus) {
-      //               distanceBus = distanceBusB
-      //               localeBus = index
-      //             }
-      //           }
-      //           index++;
-      //         }
-      //         distance += distanceBus
-      //         roadPivot = feature.geometry.coordinates[localeUser]
-      //         for (let index = localeBus; index < localeUser; index++) {
-      //           distance += this.Distance(this.convertCords(feature.geometry.coordinates[index]), this.convertCords(feature.geometry.coordinates[index + 1]))
-      //         }
-      //       }
-      //     }
-      //   }
-      //   const time = this.timeAproxime(distance, bus.locationId.speed)
-      //   return {
-      //     id: bus.id,
-      //     trademark: bus.trademark,
-      //     plaque: bus.plaque,
-      //     photo: bus.photo,
-      //     userId: bus.userId,
-      //     locationId: bus.locationId,
-      //     road: bus.road,
-      //     distanceUser: distance,
-      //     linea: bus.linea,
-      //     roadPivot: roadPivot,
-      //     distance: distance,
-      //     time: time,
-      //     status: 'cercano'
-      //   }
-      // } else {
-        // const distance = this.Distance(location, this.convertCords(bus.locationId.cords))
-        // const time = this.timeAproxime(distance, bus.locationId.speed)
-        // return {
-        //   id: bus.id,
-        //   trademark: bus.trademark,
-        //   plaque: bus.plaque,
-        //   photo: bus.photo,
-        //   userId: bus.userId,
-        //   locationId: bus.locationId,
-        //   road: bus.road,
-        //   distanceUser: bus.distanceUser,
-        //   linea: bus.linea,
-        //   roadPivot: [],
-        //   status: 'cercano'
-        // }
-      
-    // })
     if (busesOld.length !== 0) {
 
       const handleStatus = treeBus.map((bus) => {

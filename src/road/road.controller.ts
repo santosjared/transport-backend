@@ -4,7 +4,9 @@ import { CreateRoadDto } from './dto/create-road.dto';
 import { UpdateRoadDto } from './dto/update-road.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FiltersDto } from 'src/utils/filters.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { RolesGuard } from 'src/auth/guards/permission.guard';
+import { Permissions } from 'src/auth/decorator/permission.decorator';
 
 @Controller('road')
 @ApiBearerAuth()
@@ -12,9 +14,9 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
 export class RoadController {
   constructor(private readonly roadService: RoadService) {}
   
-  @UseGuards(JwtAuthGuard)
   @Post()
-  // @UseGuards(JwtAuthGuard)
+  @Permissions('Crear-ruta')
+  @UseGuards(AuthGuard,RolesGuard)
   @UsePipes(new ValidationPipe({
     transform: true,
     whitelist: true,
@@ -44,20 +46,23 @@ export class RoadController {
     return this.roadService.create(createRoadDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get()
+  @Permissions('Listar-ruta')
+  @UseGuards(AuthGuard,RolesGuard)
   async findAll(@Query() filters:FiltersDto) {
     return this.roadService.findAll(filters);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
+  @Permissions('Listar-ruta')
+  @UseGuards(AuthGuard,RolesGuard)
   async findOne(@Param('id') id: string) {
     return this.roadService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
+  @Permissions('Editar-ruta')
+  @UseGuards(AuthGuard,RolesGuard)
   @UsePipes(new ValidationPipe({
     transform: true,
     whitelist: true,
@@ -86,8 +91,9 @@ export class RoadController {
     return this.roadService.update(id, updateRoadDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @Permissions('Eliminar-ruta')
+  @UseGuards(AuthGuard,RolesGuard)
   async remove(@Param('id') id: string) {
     return this.roadService.remove(id);
   }

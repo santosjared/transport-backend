@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateRateDto {
     @ApiProperty()
-    rates:[]
+    rates:any[]
     @ApiProperty()
     name:string
     @ApiProperty()

@@ -24,6 +24,12 @@ import { RoadSchema } from 'src/road/schema/road.schema';
 import { Permission, PermissionSchema } from 'src/permission/schema/permission.schema';
 import { Components, ComponentsSchma } from 'src/componentes/schema/componentes';
 import { Rol, rolSchema } from 'src/roles/schema/roles.schema';
+import { GenderService } from 'src/gender/gender.service';
+import { GenderModule } from 'src/gender/gender.module';
+import { ContryModule } from 'src/contry/contry.module';
+import { BusmarkerModule } from 'src/busmarker/busmarker.module';
+import { BustypeModule } from 'src/bustype/bustype.module';
+import { BusstatusModule } from 'src/busstatus/busstatus.module';
 
 @Module({
   imports: [
@@ -79,6 +85,11 @@ import { Rol, rolSchema } from 'src/roles/schema/roles.schema';
       name:Rol.name,
       schema:rolSchema
     }]),
+    GenderModule,
+    ContryModule,
+    BusmarkerModule,
+    BustypeModule,
+    BusstatusModule,
     ScheduleModule.forRoot()
   ],
   providers: [SocketGateway, SocketService, AuthService,LocationsService,UsersService, LineaService,StatusService]

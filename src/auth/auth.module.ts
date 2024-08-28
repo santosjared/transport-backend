@@ -25,6 +25,7 @@ import { JwtStrategy } from './auth.stratigy';
     schema:UsersSchema,
   }]),
   JwtModule.register({
+    global: true,
     secret:getConfig().token_Secret,
     signOptions:{expiresIn:getConfig().token_expire}
   })

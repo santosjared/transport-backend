@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument } from "mongoose";
+import mongoose, { HydratedDocument } from "mongoose";
+import { Tarifas } from "src/tarifas/schema/tarifas.schema";
 import {v4 as uuidv4} from 'uuid'
 
 export type RateDocument = HydratedDocument<Rate>
@@ -8,8 +9,8 @@ export type RateDocument = HydratedDocument<Rate>
 export class Rate{
     @Prop({type:String, default:()=>uuidv4(), unique:true})
     id:string
-    @Prop()
-    rates:[]
+    @Prop({type:[{type:mongoose.SchemaTypes.ObjectId, ref:'Tarifas'}]})
+    rates:Tarifas[]
     @Prop()
     name:string
     @Prop()

@@ -14,11 +14,7 @@ export class StatusService {
  ){}
  async findAll(filters: any) {
     const { filter, skip, limit } = filters;
-  
-    // Crear un objeto vacío para los filtros
     const searchFilters: any = { delete: false, busId: null };
-  
-    // Agregar condiciones dinámicamente basado en los filtros proporcionados
     if (filter) {
       if (filter.userName) {
         searchFilters['name'] = { $regex: new RegExp(filter.userName, 'i') };
@@ -30,9 +26,8 @@ export class StatusService {
         searchFilters['email'] = { $regex: new RegExp(filter.email, 'i') };
       }
       if (filter.status) {
-        searchFilters['status'] = filter.status; // Filtrado exacto para status
+        searchFilters['status'] = filter.status; 
       }
-      // Puedes agregar más filtros según sea necesario
     }
   
     let resultado, total;
@@ -71,6 +66,7 @@ export class StatusService {
         photo: bus ? bus.photo : null,
         linea: linea ? linea.name : null
       };
+
       if((filter.busName && filter.busName.toLowerCase() !=='ninguno' && !bus )||
       (filter.plaque && filter.plaque.toLowerCase() !=='ninguno' && !bus )||
       (filter.linea && filter.linea.toLowerCase() !=='ninguno' && !linea )
@@ -78,7 +74,7 @@ export class StatusService {
         return null
       }
       if (
-        (filter.busName && bus && !bus.trademark.match(new RegExp(filter.busName, 'i'))) ||
+        (filter.busName && bus && !bus.trademark.name.match(new RegExp(filter.busName, 'i'))) ||
         (filter.plaque && bus && !bus.plaque.match(new RegExp(filter.plaque, 'i'))) ||
         (filter.linea && linea && !linea.name.match(new RegExp(filter.linea, 'i'))) 
       ) {
@@ -87,8 +83,6 @@ export class StatusService {
   
       return userData;
     });
-  
-    // Filtrar resultados nulos y devolver el resultado
     const filteredResults = (await Promise.all(resultPromises)).filter(result => result !== null);
     return filteredResults;
   }

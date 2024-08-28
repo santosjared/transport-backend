@@ -4,14 +4,20 @@ import { UpdateHorarioDto } from './dto/update-horario.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Horario, HorarioDocument } from './schema/horario.schema';
 import { Model } from 'mongoose';
-import { FiltersDto } from 'src/utils/filters.dto';
+import { DaysService } from 'src/days/days.service';
 
 @Injectable()
 export class HorarioService {
-  constructor(@InjectModel(Horario.name) private readonly horarioModel: Model<HorarioDocument>) { }
+  constructor(@InjectModel(Horario.name) private readonly horarioModel: Model<HorarioDocument>,
+  private DaysService:DaysService
+) { }
   async create(createHorarioDto: CreateHorarioDto) {
     const errorMessages = await this.isValidData(createHorarioDto)
     if (!errorMessages) {
+      if(createHorarioDto.otherDay){
+        const day = await this.DaysService.create({name:createHorarioDto.otherDay})
+        createHorarioDto.days.push(day._id.toString())
+      }
       return await this.horarioModel.create(createHorarioDto);
     }
     throw new HttpException({ message: errorMessages }, HttpStatus.BAD_REQUEST);
@@ -28,6 +34,9 @@ export class HorarioService {
         if (filter.place) {
           searchFilters['place'] = { $regex: new RegExp(filter.place, 'i') };
         }
+        if (filter.arrive) {
+          searchFilters['arrive'] = { $regex: new RegExp(filter.arrive, 'i') };
+        }
         if (filter.firstOut) {
           searchFilters['firstOut'] = { $regex: new RegExp(filter.firstOut, 'i') };
         }
@@ -35,20 +44,23 @@ export class HorarioService {
           searchFilters['lastOut'] = { $regex: new RegExp(filter.lastOut, 'i') };
         }
         if (filter.days) {
-          searchFilters['days'] = { $regex: new RegExp(filter.days, 'i') };
+          const days = await this.DaysService.findName(filter.days)
+          if(days){
+            searchFilters['days'] = days._id
+          }
         }
       }
       if (skip !== undefined && limit !== undefined) {
-        const result = await this.horarioModel.find(searchFilters).skip(skip).limit(limit).exec();
+        const result = await this.horarioModel.find(searchFilters).populate('days').skip(skip).limit(limit).exec();
         const total = await this.horarioModel.countDocuments(searchFilters);
         return { result, total };
       }
 
-      const result = await this.horarioModel.find(searchFilters);
+      const result = await this.horarioModel.find(searchFilters).populate('days');
       const total = await this.horarioModel.countDocuments(searchFilters);
       return { result, total };
     }
-    const result = await this.horarioModel.find({ delete: false });
+    const result = await this.horarioModel.find({ delete: false }).populate('days');
     const total = await this.horarioModel.countDocuments({ delete: false });
     return { result, total };
   }
@@ -61,6 +73,10 @@ export class HorarioService {
   async update(id: string, updateHorarioDto: UpdateHorarioDto) {
     const errorMessages = await this.isValidData(updateHorarioDto, true, id)
     if (!errorMessages) {
+      if(updateHorarioDto.otherDay){
+        const day = await this.DaysService.create({name:updateHorarioDto.otherDay})
+        updateHorarioDto.days.push(day._id.toString())
+      }
       return await this.horarioModel.findOneAndUpdate({ id }, updateHorarioDto);
     }
     throw new HttpException({ message: errorMessages }, HttpStatus.BAD_REQUEST);

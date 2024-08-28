@@ -4,7 +4,9 @@ import { CreateRateDto } from './dto/create-rate.dto';
 import { UpdateRateDto } from './dto/update-rate.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FiltersDto } from 'src/utils/filters.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { RolesGuard } from 'src/auth/guards/permission.guard';
+import { Permissions } from 'src/auth/decorator/permission.decorator';
 
 @Controller('tarifa')
 @ApiTags('tarifa')
@@ -12,32 +14,37 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
 export class TarifaController {
   constructor(private readonly rateService: RateService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post()
+  @Permissions('Crear-tarifa')
+  @UseGuards(AuthGuard,RolesGuard)
   create(@Body() createRatefaDto: CreateRateDto) {
     return this.rateService.create(createRatefaDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get()
+  @Permissions('Listar-tarifa')
+  @UseGuards(AuthGuard,RolesGuard)
   findAll(@Query() filters:FiltersDto) {
     return this.rateService.findAll(filters);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
+  @Permissions('Listar-tarifa')
+  @UseGuards(AuthGuard,RolesGuard)
   findOne(@Param('id') id: string) {
     return this.rateService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
+  @Permissions('Editar-tarifa')
+  @UseGuards(AuthGuard,RolesGuard)
   update(@Param('id') id: string, @Body() updateRateDto: UpdateRateDto) {
     return this.rateService.update(id, updateRateDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @Permissions('Eliminar-tarifa')
+  @UseGuards(AuthGuard,RolesGuard)
   remove(@Param('id') id: string) {
     return this.rateService.remove(id);
   }

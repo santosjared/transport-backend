@@ -5,13 +5,26 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Rate, RateDocument } from './schema/rate.schema';
 import { Model } from 'mongoose';
 import { FiltersDto } from 'src/utils/filters.dto';
+import { TarifasService } from 'src/tarifas/tarifas.service';
 
 @Injectable()
 export class RateService {
-  constructor(@InjectModel(Rate.name) private readonly tarifaModel:Model<RateDocument>){}
+  constructor(@InjectModel(Rate.name) private readonly tarifaModel:Model<RateDocument>,
+  private tarifaService:TarifasService
+){}
   async create(createRateDto: CreateRateDto) {
     const errorMessages= await this.isValidData(createRateDto)
     if(!errorMessages){
+      const tarifasId = await Promise.all(createRateDto.rates.map(async (tarifa: any) => {
+        const idTarifa = await this.tarifaService.findOne(tarifa?.id);
+          if (idTarifa) {
+            return idTarifa._id.toString();
+          } else {
+            const newTarifa = await this.tarifaService.create(tarifa);
+            return newTarifa._id.toString();
+          }
+      }));
+      createRateDto.rates = tarifasId;
       return await this.tarifaModel.create(createRateDto);
     }
     throw new HttpException(errorMessages, HttpStatus.BAD_REQUEST);
@@ -36,20 +49,26 @@ export class RateService {
             $lte: endDate
           };
         }
+        if(filter.tarifa){
+          const tarifa = await this.tarifaService.findName(filter.tarifa)
+          // console.log(tarifa)
+          if(tarifa){
+            searchFilters['rates'] = tarifa._id
+          }
+        }
       }
-    
       if (skip !== undefined && limit !== undefined) {
-        const result = await this.tarifaModel.find(searchFilters).skip(skip).limit(limit).exec();
+        const result = await this.tarifaModel.find(searchFilters).populate('rates').skip(skip).limit(limit).exec();
         const total = await this.tarifaModel.countDocuments(searchFilters);
         return { result, total };
       }
     
-      const result = await this.tarifaModel.find(searchFilters);
+      const result = await this.tarifaModel.find(searchFilters).populate('rates');
       const total = await this.tarifaModel.countDocuments(searchFilters);
       return { result, total };
     }
         
-     const result = await this.tarifaModel.find({delete:false})
+     const result = await this.tarifaModel.find({delete:false}).populate('rates')
       const total = await this.tarifaModel.countDocuments({delete:false})
       return { result, total }
   }

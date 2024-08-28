@@ -1,5 +1,8 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import mongoose, { HydratedDocument } from "mongoose";
+import { BusMarker } from "src/busmarker/schema/busmarker.schema";
+import { BusStatus } from "src/busstatus/schema/busstatus.schema";
+import { BusType } from "src/bustype/schema/bustype.schema";
 import { Locations } from "src/locations/schema/locations.schema";
 import { Road } from "src/road/schema/road.schema";
 import { Users } from "src/users/schema/users.schema";
@@ -11,12 +14,12 @@ export type BusDocmunet = HydratedDocument<Bus>
 export class Bus{
     @Prop({type:String, default: ()=>uuidv4(), required:true})
     id:string
-    @Prop()
-    trademark:string
+    @Prop({type:mongoose.Schema.Types.ObjectId, ref:'BusMarker'})
+    trademark:BusMarker
     @Prop()
     model:number
-    @Prop()
-    type:string
+    @Prop({type:mongoose.Schema.Types.ObjectId,ref:'BusType'})
+    type:BusType
     @Prop()
     plaque:string
     @Prop()
@@ -25,8 +28,8 @@ export class Bus{
     photo:string
     @Prop()
     ruat:string
-    @Prop({type:String})
-    status:string
+    @Prop({type:mongoose.Schema.Types.ObjectId, ref:'BusStatus'})
+    status:BusStatus
     
     @Prop({type:mongoose.Schema.Types.ObjectId, ref:'Users',default:null})
     userId:Users

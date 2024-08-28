@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument } from "mongoose";
+import mongoose, { HydratedDocument } from "mongoose";
+import { Days } from "src/days/schema/days.schema";
 import { v4 as uuidv4} from 'uuid'
 
 export type HorarioDocument = HydratedDocument<Horario>
@@ -13,6 +14,8 @@ export class Horario{
     @Prop()
     place:string
     @Prop()
+    arrive:string
+    @Prop()
     firstOut:string
     @Prop()
     lastOut:string
@@ -20,8 +23,8 @@ export class Horario{
     frequency:number
     @Prop()
     time:string
-    @Prop()
-    days:string[]
+    @Prop({type:[{type:mongoose.SchemaTypes.ObjectId, ref:'Days'}]})
+    days:Days[]
     @Prop()
     description:string
     @Prop({type:Boolean, default:false})

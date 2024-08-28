@@ -7,10 +7,10 @@ import { UpdateContryDto } from './dto/update-contry.dto';
 export class ContryController {
   constructor(private readonly contryService: ContryService) {}
 
-  @Post()
-  create(@Body() createContryDto: CreateContryDto) {
-    return this.contryService.create(createContryDto);
-  }
+  // @Post()
+  // create(@Body() createContryDto: CreateContryDto) {
+  //   return this.contryService.create(createContryDto);
+  // }
 
   @Get()
   findAll() {
@@ -19,16 +19,16 @@ export class ContryController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.contryService.findOne(+id);
+    return this.contryService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateContryDto: UpdateContryDto) {
-    return this.contryService.update(+id, updateContryDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateContryDto: UpdateContryDto) {
+  //   return this.contryService.update(+id, updateContryDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.contryService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.contryService.remove(+id);
+  // }
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, Min, IsArray, ArrayNotEmpty, IsOptional, IsIn, IsDateString, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, Min, IsArray, ArrayNotEmpty, IsOptional, IsIn, Matches } from 'class-validator';
 
 export class CreateHorarioDto {
   @ApiProperty({ description: 'Nombre del horario' })
@@ -8,9 +8,14 @@ export class CreateHorarioDto {
   name: string;
 
   @ApiProperty({ description: 'Lugar del horario' })
-  @IsString({ message: 'El lugar de salida debe ser una cadena de caracteres' })
-  @IsNotEmpty({ message: 'El lugar de salida no puede estar vacío' })
+  @IsString({ message: 'El lugar de partida debe ser una cadena de caracteres' })
+  @IsNotEmpty({ message: 'El lugar de partida no puede estar vacío' })
   place: string;
+
+  @ApiProperty({ description: 'Lugar del horario' })
+  @IsString({ message: 'El lugar de llegada debe ser una cadena de caracteres' })
+  @IsNotEmpty({ message: 'El lugar de llegada no puede estar vacío' })
+  arrive: string;
 
   @ApiProperty({ description: 'Primera hora de salida (en formato HH:MM)' })
   @IsString({ message: 'La primera hora de salida debe ser una cadena de caracteres' })
@@ -41,10 +46,14 @@ export class CreateHorarioDto {
 
   @ApiProperty({ description: 'Días de la semana' })
   @IsArray({ message: 'Los días deben ser un arreglo' })
-  @ArrayNotEmpty({ message: 'El arreglo de días no puede estar vacío' })
   @IsString({ each: true, message: 'Cada día debe ser una cadena de caracteres' })
   days: string[];
 
+  @ApiProperty({ description: 'Descripción del otro dia' })
+  @IsString({ message: 'El otro día debe ser una cadena de caracteres' })
+  @IsOptional()
+  otherDay: string;
+  
   @ApiProperty({ description: 'Descripción del horario' })
   @IsString({ message: 'La descripción debe ser una cadena de caracteres' })
   @IsOptional()
@@ -60,7 +69,4 @@ export class CreateHorarioDto {
   __v: string
 }
 
-function IsUnique(arg0: { message: string; }): (target: CreateHorarioDto, propertyKey: "name") => void {
-  throw new Error('Function not implemented.');
-}
 

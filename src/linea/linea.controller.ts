@@ -9,7 +9,9 @@ import { AsignedHorarioDto } from './dto/asigned-horario';
 import { AsignedRateDto} from './dto/asigned-tarifa';
 import { AsignedBusDto } from './dto/asigned-bus';
 import { AsignedBusRoadDto } from './dto/asignedbusroad.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { RolesGuard } from 'src/auth/guards/permission.guard';
+import { Permissions } from 'src/auth/decorator/permission.decorator';
 
 @Controller('linea')
 @ApiTags('linea')
@@ -17,8 +19,9 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
 export class LineaController {
   constructor(private readonly lineaService: LineaService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post()
+  @Permissions('Crear-Linea')
+  @UseGuards(AuthGuard,RolesGuard)
   @UsePipes(new ValidationPipe({
     transform: true,
     whitelist: true,
@@ -39,55 +42,51 @@ export class LineaController {
     return this.lineaService.create(createLineaDto);
   }
 
-  // @UseGuards(JwtAuthGuard)
   @Get()
   findAll(@Query() filters:FiltersDto) {
     return this.lineaService.findAll(filters);
   }
 
-  // @UseGuards(JwtAuthGuard)
   @Get('requests')
   async requests (){
     return await this.lineaService.requests()
   }
 
-  // @UseGuards(JwtAuthGuard)
   @Get('roads/:id')
   async allRoadsNotAsigned (@Param('id') id:string){
     return await this.lineaService.allRoadNotAsigned(id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Get('allBusNotAsigned')
   async allBusNotAsigned(@Query() filters:FiltersDto){
     return await this.lineaService.allBusNotAsigned(filters)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Get('horarios/:id')
   async horario (@Param('id') id:string){
     return await this.lineaService.allHorarioNotAsigned(id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Get('tarifa/:id')
   async tarifa (@Param('id') id:string){
     return await this.lineaService.allTarifaNotAsigned(id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Get('lineaOne/:id')
   async findLineaOne (@Param('id') id:string){
     return await this.lineaService.findOneLinea(id)
   }
 
-  // @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.lineaService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('desasigned/:id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -109,7 +108,7 @@ export class LineaController {
     return await this.lineaService.desasignedRoad(id, desasignedRoad);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('asigned/:id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -132,7 +131,7 @@ export class LineaController {
   }
   
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('desasignedHorario/:id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -154,7 +153,7 @@ export class LineaController {
     return await this.lineaService.desasignedHorario(id,desasignedHorario)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('asignedHorario/:id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -176,7 +175,7 @@ export class LineaController {
     return await this.lineaService.asignedHorario(id,asignedHorario)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('desasignedTarifa/:id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -198,7 +197,7 @@ export class LineaController {
     return await this.lineaService.desasignedTarifa(id,desasignedTarifa)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('asignedTarifa/:id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -220,7 +219,7 @@ export class LineaController {
     return await this.lineaService.asignedTarifa(id,asignedTarifa)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('desasignedBus/:id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -242,7 +241,7 @@ export class LineaController {
     return await this.lineaService.desasignedBus(id,desasignedBus)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('asignedBus/:id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -266,7 +265,7 @@ export class LineaController {
     return await this.lineaService.asignedBus(id,asignedBus)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('asignedBusRuta/:id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -284,11 +283,8 @@ export class LineaController {
       };
     },
   }))
-  async asignedBusRuta(@Param('id') id: string, @Body() asignedBusroad:AsignedBusRoadDto){
-    return await this.lineaService.asignedBusRuta(id,asignedBusroad)
-  }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('desasignedBusRuta/:id')
   @UsePipes(new ValidationPipe({
     transform: true,
@@ -310,8 +306,9 @@ export class LineaController {
     return await this.lineaService.desasignedBusRuta(id,asignedBusroad)
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
+  @Permissions('Editar-linea')
+  @UseGuards(AuthGuard,RolesGuard)
   @UsePipes(new ValidationPipe({
     transform: true,
     whitelist: true,
@@ -332,8 +329,9 @@ export class LineaController {
     return await this.lineaService.update(id, updateLineaDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @Permissions('Eliminar-linea')
+  @UseGuards(AuthGuard,RolesGuard)
   remove(@Param('id') id: string) {
     return this.lineaService.remove(id);
   }

@@ -21,6 +21,11 @@ import { ComponentesModule } from './componentes/componentes.module';
 import { PermissionModule } from './permission/permission.module';
 import { GenderModule } from './gender/gender.module';
 import { ContryModule } from './contry/contry.module';
+import { BusmarkerModule } from './busmarker/busmarker.module';
+import { BustypeModule } from './bustype/bustype.module';
+import { BusstatusModule } from './busstatus/busstatus.module';
+import { DaysModule } from './days/days.module';
+import { TarifasModule } from './tarifas/tarifas.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -48,6 +53,11 @@ import { ContryModule } from './contry/contry.module';
   PermissionModule,
   GenderModule,
   ContryModule,
+  BusmarkerModule,
+  BustypeModule,
+  BusstatusModule,
+  DaysModule,
+  TarifasModule,
 ]
 })
 export class AppModule {}

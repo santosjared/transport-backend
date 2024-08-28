@@ -28,8 +28,7 @@ export class RolesService {
   }
   async findAll(filters: string): Promise<Role[]> {
     const regexPattern = new RegExp(filters, 'i');
-    return await this.rolModel.find({ name: { $regex: regexPattern }, delete:false }).populate('Users').populate('access').exec()
-
+    return await this.rolModel.find({ name: { $regex: regexPattern, $ne: 'Administrador' }, delete:false }).populate('Users').populate('access').exec()
   }
 
   async findOne(id: string) {

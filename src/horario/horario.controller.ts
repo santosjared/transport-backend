@@ -1,22 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put, Query, ValidationPipe, UsePipes, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query, ValidationPipe, UsePipes, UseGuards } from '@nestjs/common';
 import { HorarioService } from './horario.service';
 import { CreateHorarioDto } from './dto/create-horario.dto';
 import { UpdateHorarioDto } from './dto/update-horario.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FiltersDto } from 'src/utils/filters.dto';
-import { RolesGuard } from 'src/roles/guards/rols.guard';
-import { Permissions } from 'src/roles/decorator/permission.decorator';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { RolesGuard } from 'src/auth/guards/permission.guard';
+import { Permissions } from 'src/auth/decorator/permission.decorator';
+// import { PermissionsGuard } from 'src/roles/guards/rols.guard';
+// import { Permissions } from 'src/roles/decorator/permission.decorator';
 
 @Controller('horario')
 @ApiTags('horario')
-// @UseGuards(RolesGuard)
+// @UseGuards(PermissionsGuard)
 @ApiBearerAuth()
 export class HorarioController {
   constructor(private readonly horarioService: HorarioService) {}
-
-  @UseGuards(JwtAuthGuard)
   @Post()
+  @Permissions('Crear-horario')
+  @UseGuards(AuthGuard,RolesGuard)
   @UsePipes(new ValidationPipe({
     transform: true,
     whitelist: true,
@@ -37,20 +39,23 @@ export class HorarioController {
     return this.horarioService.create(createHorarioDto)
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get()
+  @Permissions('Listar-horario')
+  @UseGuards(AuthGuard,RolesGuard)
   findAll(@Query() filters:FiltersDto) {
     return this.horarioService.findAll(filters);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
+  @Permissions('Listar-horario')
+  @UseGuards(AuthGuard,RolesGuard)
   findOne(@Param('id') id: string) {
     return this.horarioService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
+  @Permissions('Editar-horario')
+  @UseGuards(AuthGuard,RolesGuard)
   @UsePipes(new ValidationPipe({
     transform: true,
     whitelist: true,
@@ -71,9 +76,9 @@ export class HorarioController {
   update(@Param('id') id: string, @Body() updateHorarioDto: UpdateHorarioDto) {
     return this.horarioService.update(id, updateHorarioDto);
   }
-
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @Permissions('Eliminar-horario')
+  @UseGuards(AuthGuard,RolesGuard)
   remove(@Param('id') id: string) {
     return this.horarioService.remove(id);
   }

@@ -3,6 +3,8 @@ import { IsDate, IsEmail, IsString, isEmail, isString } from "class-validator";
 import mongoose, { HydratedDocument } from "mongoose";
 import { Auth } from "src/auth/schema/auth.schema";
 import { Bus } from "src/bus/schema/bus.schema";
+import { Contry } from "src/contry/schema/contry.schema";
+import { Gender } from "src/gender/schema/gender.schema";
 import { LicenceDriver } from "src/licence-driver/schema/licence-driver.schema";
 import { Rol } from "src/roles/schema/roles.schema";
 import {v4 as uuid} from 'uuid'
@@ -21,9 +23,8 @@ export class Users {
     @Prop({required:true})
     lastName:string
 
-    @IsString()
-    @Prop()
-    gender:string
+    @Prop({type:mongoose.Schema.Types.ObjectId, ref:'Gender'})
+    gender:Gender
 
     @IsString()
     @Prop({required:true})
@@ -37,9 +38,8 @@ export class Users {
     @Prop({required:true})
     address:string
 
-    @IsString()
-    @Prop({required:true})
-    contry:string
+    @Prop({type:mongoose.Schema.Types.ObjectId, ref:'Contry'})
+    contry:Contry
 
     @IsString()
     @IsEmail()

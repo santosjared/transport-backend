@@ -7,6 +7,10 @@ import { Horario, HorarioSchema } from 'src/horario/schema/horario.schema';
 import { Rate, rateSchema } from 'src/rate/schema/rate.schema';
 import { Bus, busSchema } from 'src/bus/schema/bus.schema';
 import { Road, RoadSchema } from 'src/road/schema/road.schema';
+import { BusmarkerModule } from 'src/busmarker/busmarker.module';
+import { BustypeModule } from 'src/bustype/bustype.module';
+import { BusstatusModule } from 'src/busstatus/busstatus.module';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports:[MongooseModule.forFeature([{
@@ -28,7 +32,11 @@ import { Road, RoadSchema } from 'src/road/schema/road.schema';
   MongooseModule.forFeature([{
     name:Road.name,
     schema:RoadSchema
-  }])
+  }]),
+  BusmarkerModule,
+  BustypeModule,
+  BusstatusModule,
+  UsersModule
 ],
   controllers: [LineaController],
   providers: [LineaService],

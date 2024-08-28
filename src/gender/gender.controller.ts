@@ -7,10 +7,10 @@ import { UpdateGenderDto } from './dto/update-gender.dto';
 export class GenderController {
   constructor(private readonly genderService: GenderService) {}
 
-  @Post()
-  create(@Body() createGenderDto: CreateGenderDto) {
-    return this.genderService.create(createGenderDto);
-  }
+  // @Post()
+  // create(@Body() createGenderDto: CreateGenderDto) {
+  //   return this.genderService.create(createGenderDto);
+  // }
 
   @Get()
   findAll() {
@@ -19,16 +19,16 @@ export class GenderController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.genderService.findOne(+id);
+    return this.genderService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGenderDto: UpdateGenderDto) {
-    return this.genderService.update(+id, updateGenderDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateGenderDto: UpdateGenderDto) {
+  //   return this.genderService.update(+id, updateGenderDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.genderService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.genderService.remove(+id);
+  // }
 }

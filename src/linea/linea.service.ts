@@ -3,7 +3,7 @@ import { CreateLineaDto } from './dto/create-linea.dto';
 import { UpdateLineaDto } from './dto/update-linea.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Linea, LineaDocument } from './schema/linea.schema';
-import { Model } from 'mongoose';
+import { model, Model } from 'mongoose';
 import { FiltersDto } from 'src/utils/filters.dto';
 import { AsignedRoadDto } from './dto/asigned-road';
 import { Horario, HorarioDocument } from 'src/horario/schema/horario.schema';
@@ -14,6 +14,9 @@ import { Bus, BusDocmunet } from 'src/bus/schema/bus.schema';
 import { AsignedBusDto } from './dto/asigned-bus';
 import { Road, RoadDocument } from 'src/road/schema/road.schema';
 import { AsignedBusRoadDto } from './dto/asignedbusroad.dto';
+import { BusmarkerService } from 'src/busmarker/busmarker.service';
+import { BustypeService } from 'src/bustype/bustype.service';
+import { BusstatusService } from 'src/busstatus/busstatus.service';
 
 @Injectable()
 export class LineaService {
@@ -22,7 +25,10 @@ export class LineaService {
     @InjectModel(Horario.name) private readonly horarioModel: Model<HorarioDocument>,
     @InjectModel(Rate.name) private readonly tarifaModel: Model<RateDocument>,
     @InjectModel(Bus.name) private readonly busModel: Model<BusDocmunet>,
-    @InjectModel(Road.name) private readonly roadModel: Model<RoadDocument>
+    @InjectModel(Road.name) private readonly roadModel: Model<RoadDocument>,
+    private BusMarkerService:BusmarkerService,
+    private BusTypeService:BustypeService,
+    private BusStatusService:BusstatusService
   ) { }
   async create(createLineaDto: CreateLineaDto) {
     const errorMessages = await this.isValidData(createLineaDto)
@@ -36,8 +42,18 @@ export class LineaService {
     const { filter, skip, limit } = filters;
     const populateOptions = [
       { path: 'road', match: { delete: false } },
-      { path: 'horario', match: { delete: false } },
-      { path: 'rate', match: { delete: false } },
+      { path: 'horario', match: { delete: false },
+      populate:[{
+        path: 'days',
+        model: 'Days'
+      }]
+    },
+      { path: 'rate', match: { delete: false },
+        populate:[{
+          path: 'rates',
+          model: 'Tarifas'
+        }]
+     },
       {
         path: 'buses',
         match: { delete: false },
@@ -56,7 +72,10 @@ export class LineaService {
             path: 'locationId',
             model: 'Locations',
             match: { delete: false }
-          }
+          },
+          {path:'trademark', model:'BusMarker'},
+          {path:'type', model:'BusType'},
+          {path:'status', model:'BusStatus'}
         ]
       }
     ];
@@ -167,7 +186,10 @@ export class LineaService {
             path: 'locationId',
             model: 'Locations',
             match: { delete: false }
-          }
+          },
+          {path:'trademark', model:'BusMarker'},
+          {path:'type', model:'BusType'},
+          {path:'status', model:'BusStatus'}
         ]
       }
     ];
@@ -252,14 +274,22 @@ export class LineaService {
   async desasignedHorario(id: string, desasignedHorario: AsignedHorarioDto) {
     const update = await this.lineModel.findOneAndUpdate({ id }, { $pull: { horario: { $in: desasignedHorario.horario } } }, { new: true })
     if (update) {
-      return update.populate([{ path: 'horario', match: { delete: false } }])
+      return update.populate([{ path: 'horario',model:'Horario', match: { delete: false },
+        populate:[{
+          path:'days', model:'Days'
+        }]
+       }])
     }
     throw new NotFoundException('linea no encontrado');
   }
   async asignedHorario(id: string, asignedHorario: AsignedHorarioDto) {
     const update = await this.lineModel.findOneAndUpdate({ id }, { $addToSet: { horario: { $each: asignedHorario.horario } } }, { new: true })
     if (update) {
-      return update.populate([{ path: 'horario', match: { delete: false } }])
+      return update.populate([{ path: 'horario',model:'Horario', match: { delete: false },
+        populate:[{
+          path:'days', model:'Days'
+        }]
+       }])
     }
     throw new NotFoundException('linea no encontrado');
   }
@@ -270,9 +300,9 @@ export class LineaService {
         const horarioIds = linea.horario.map((id) => {
           return id.toString()
         })
-        return await this.horarioModel.find({ _id: { $nin: horarioIds }, delete: false })
+        return await this.horarioModel.find({ _id: { $nin: horarioIds }, delete: false }).populate('days')
       }
-      return await this.horarioModel.find({ delete: false })
+      return await this.horarioModel.find({ delete: false }).populate('days')
     }
     throw new NotFoundException('linea no encontrado');
   }
@@ -283,28 +313,35 @@ export class LineaService {
         const TarifaIds = linea.rate.map((id) => {
           return id.toString()
         })
-        return await this.tarifaModel.find({ _id: { $nin: TarifaIds }, delete: false })
+        return await this.tarifaModel.find({ _id: { $nin: TarifaIds }, delete: false }).populate('rates')
       }
-      return await this.tarifaModel.find({ delete: false })
+      return await this.tarifaModel.find({ delete: false }).populate('rates')
     }
     throw new NotFoundException('linea no encontrado');
   }
   async desasignedTarifa(id: string, desasignedTarifa: AsignedRateDto) {
     const update = await this.lineModel.findOneAndUpdate({ id }, { $pull: { rate: { $in: desasignedTarifa.rate } } }, { new: true })
     if (update) {
-      return update.populate([{ path: 'rate', match: { delete: false } }])
+      return update.populate([{ path: 'rate', model:'Rate', match: { delete: false },
+        populate:[{
+          path:'rates', model:'Tarifas'
+        }]
+       }])
     }
     throw new NotFoundException('linea no encontrado');
   }
   async asignedTarifa(id: string, asignedTarifa: AsignedRateDto) {
     const update = await this.lineModel.findOneAndUpdate({ id }, { $addToSet: { rate: { $each: asignedTarifa.rate } } }, { new: true })
     if (update) {
-      return update.populate([{ path: 'rate', match: { delete: false } }])
+      return update.populate([{ path: 'rate', model:'Rate', match: { delete: false },
+        populate:[{
+          path:'rates', model:'Tarifas'
+        }]
+       }])
     }
     throw new NotFoundException('linea no encontrado');
   }
   async allBusNotAsigned(filters) {
-    // Retrieve the list of buses already assigned to a line
     const busAssignedToLinea = await this.lineModel.find().distinct('buses').exec();
     const busIdsAssignedToLinea = busAssignedToLinea
       ? busAssignedToLinea.filter(buses => buses !== null).map(buses => buses.toString())
@@ -314,9 +351,11 @@ export class LineaService {
     const { filter, skip, limit } = filters;
     const searchFilters = { delete: false };
 
-    // Add filters based on the input
     if (filter?.trademark) {
-      searchFilters['trademark'] = { $regex: new RegExp(filter.trademark, 'i') };
+      const trademark = await this.BusMarkerService.findName(filter.trademark)
+          if(trademark){
+            searchFilters['trademark'] = trademark._id
+          }
     }
     if (filter?.model) {
       const filterNumber = parseFloat(filter.model);
@@ -325,7 +364,10 @@ export class LineaService {
       }
     }
     if (filter?.type) {
-      searchFilters['type'] = { $regex: new RegExp(filter.type, 'i') };
+      const type = await this.BusTypeService.findName(filter.type)
+      if(type){
+        searchFilters['type'] = type._id
+      }
     }
     if (filter?.plaque) {
       searchFilters['plaque'] = { $regex: new RegExp(filter.plaque, 'i') };
@@ -337,7 +379,10 @@ export class LineaService {
       }
     }
     if (filter?.status) {
-      searchFilters['status'] = filter.status;
+      const status = await this.BusStatusService.findName(filter.status)
+      if(status){
+        searchFilters['status'] = status._id
+      }
     }
     if (filter?.userId) {
       const userId = filter.userId ? filter.userId.trim() : '';
@@ -365,7 +410,6 @@ export class LineaService {
       return { result, total: result.length }
     }
 
-    // Combine conditions
     const queryConditions = {
       $and: [
         { _id: { $nin: busIdsAssignedToLinea } },
@@ -373,14 +417,11 @@ export class LineaService {
       ]
     };
 
-    // Execute the query with optional pagination
-    const query = this.busModel.find(queryConditions).populate('userId');
+    const query = this.busModel.find(queryConditions).populate('userId').populate('trademark').populate('type').populate('status');
     if (skip !== undefined && limit !== undefined) {
       query.skip(skip).limit(limit);
     }
     const result = await query.exec();
-
-    // Get the total count of matching documents
     const total = await this.busModel.countDocuments(queryConditions).exec();
 
     return { result, total };
@@ -389,14 +430,26 @@ export class LineaService {
   async desasignedBus(id: string, desasignedBus: AsignedBusDto) {
     const update = await this.lineModel.findOneAndUpdate({ id }, { $pull: { buses: { $in: desasignedBus.buses } } }, { new: true })
     if (update) {
-      return update.populate([{ path: 'buses', match: { delete: false } }])
+      return update.populate([{ path: 'buses', model:'Bus', match: { delete: false }, 
+        populate:[
+          {path:'trademark', model:'BusMarker'},
+          {path:'type', model:'BusType'},
+          {path:'status', model:'BusStatus'},
+          {path:'userId', model:'Users'},
+        ] }])
     }
     throw new NotFoundException('linea no encontrado');
   }
   async asignedBus(id: string, asignedBus: AsignedBusDto) {
     const update = await this.lineModel.findOneAndUpdate({ id }, { $addToSet: { buses: { $each: asignedBus.buses } } }, { new: true })
     if (update) {
-      return update.populate([{ path: 'buses', match: { delete: false } }])
+      return update.populate([{ path: 'buses', model:'Bus', match: { delete: false }, 
+        populate:[
+          {path:'trademark', model:'BusMarker'},
+          {path:'type', model:'BusType'},
+          {path:'status', model:'BusStatus'},
+          {path:'userId', model:'Users'},
+        ] }])
     }
     throw new NotFoundException('linea no encontrado');
   }
@@ -412,18 +465,6 @@ export class LineaService {
       return await this.roadModel.find({ delete: false })
     }
     throw new NotFoundException('linea no encontrado');
-  }
-  async asignedBusRuta(id, data:AsignedBusRoadDto){
-    const linea = await this.lineModel.findOne({id}).populate('buses')
-    if(linea){
-      const filterBus = linea.buses.filter(bus=> bus.id === data.busId)
-      if(filterBus.length !==0){
-        const updateBus = await this.busModel.findOneAndUpdate({id:data.busId},{road:data.road})
-        return await this.lineModel.findOne({id}).populate('buses')
-      }
-      throw new NotFoundException('bus no asignado a la linea')
-    }
-    throw new NotFoundException('linea no encontrada')
   }
   async desasignedBusRuta(id, data:AsignedBusRoadDto){
     const linea = await this.lineModel.findOne({id}).populate('buses')
